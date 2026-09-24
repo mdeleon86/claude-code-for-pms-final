@@ -24,6 +24,12 @@ built from your own questions.
 
 ### 1.
 
+Im a new product manager that just joined the team. Give me a walkthrough on what is going on with rook dispatch? where should I start?
+
 ### 2.
 
+What's contradictory or missing, not just in the company documents, but across everything in 00-rook?
+
 ### 3.
+
+Im new to this terminology, what does quiet and rising, and collapsed mean in the context of the content you generated?
