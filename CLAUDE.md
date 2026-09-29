@@ -93,9 +93,32 @@ normal and flat. Support's split is **⅔ "phone never goes off"** and
 - The roadmap lists the routing change's driver as "Internal"; the release
   notes say responders asked for it.
 
+### Session 2 findings: interviews + tickets (`00-rook/feedback/`)
+- **Interviews** (4 handlers, Sofia's console research, 2–5 Sept): offers
+  vanishing (3 of 4), handlers can't tell a callout is live (3 of 4), going
+  quiet (2 of 4), and one overloaded responder (Kip's The Gale). The tickets
+  never mention alerting or overload.
+- **Tickets** (25, 13 Aug–5 Sept, 12 responders): **count responders, not
+  tickets** (quiet responders file repeatedly). By responder: 7 have both
+  problems, 4 quiet only, 1 vanish only. With 11 of 12 quiet, that overlap is
+  what chance predicts, so the tickets can't prove the two are linked. No
+  pre-4.2 tickets exist, so "new since 4.2" rests on filers' memories.
+- **The two sources cover different people.** Only Captain Vantage appears
+  in both, and together they cover all 16 responders. Most of the
+  disagreement comes from who was included. Ambrose's ticket (T-001) and his
+  interview give different details for the same story; trust the ticket.
+- **Claim both sources support:** since around August, some responders go
+  quiet for long stretches, offers vanish before they can answer, the two often
+  hit the same people, and nobody can see why. Cause, size and trend need the
+  data and code.
+- A plain-language priority page of the interview signals is published at
+  https://claude.ai/artifact/9JncqSoyU1P7Kfz8HGCe7Q (private).
+
 ### How to help me
 - I'm new to PM terminology. Explain terms plainly and label your own
-  shorthand as yours.
+  shorthand as yours. Visual summaries at a simple reading level help me.
+- Say what each claim rests on (which source, and how many people) and what
+  it can't show.
 - Separate what the documents say from interpretation and cite files.
   Challenge inherited conclusions against the data, tickets and code.
 - Git isn't on PATH. Use
