@@ -76,49 +76,66 @@ normal and flat. Support's split is **⅔ "phone never goes off"** and
 - **Nobody has written down how routing works.** That's on me.
 - The team is deliberately waiting for my read before drawing conclusions.
 
-### Session 1 findings (not yet verified with the team)
-- **Tickets and data disagree.** Only 4 of 16 responders collapsed to ~0
-  offers/week: Farlight, Meteor Mite, The Undertow and Vesper (Mite and Vesper
-  have no tickets). Several "quiet" ticket filers show *rising* offers
-  (Nightwell, Ironvale, Stormwrack and others). Ask Ravi what `pings_sent`
-  counts.
-- **Not seasonal-shaped:** acceptance held at 75–78% for 6 weeks, then fell to
-  54% in the release week. There are no prior-year rows to test "seasonal."
-  The rebound to 72.7% hides offers concentrating on fewer responders.
-- **Code:** a timeout is penalized like a decline (the glossary says they're
-  distinct). The score never recovers on its own, only by accepting (Wen's 2019
-  TODO in `history.py`). The penalty (0.12) is larger than the credit (0.08).
-- Both complaint themes hit the **same responders**: they wait weeks, then lose
-  the rare offer in seconds.
-- The roadmap lists the routing change's driver as "Internal"; the release
-  notes say responders asked for it.
+### Findings so far (sessions 1–3, not yet verified with the team)
+**Data** (`data/callout-history.csv`, 16 responders × 10 weeks). By default,
+exclude the week of 10 Aug, since it straddles the release. That choice moves
+the size of the drop (3–12 points) but none of the conclusions.
+- Acceptance held at 75–78% for 6 weeks, fell to 54% in the release week, and
+  was 68.5% after. That's a sudden drop, not a seasonal shape, and there are
+  no prior-year rows to test "seasonal."
+- Offers were moved, not lost (about 172 → 162 a week).
+  - **4 collapsed and never recovered:** Farlight, Meteor Mite, The Undertow,
+    Vesper (about 12 a week → 0–1).
+  - 10 of the other 12 gained 19–49%. Halfmoon and Ashgrove dropped about 25%,
+    then held.
+- For the four, acceptance fell first (42% in release week), and offers fell
+  the week after. Sgt. Bulwark missed 50% in release week like Vesper, but
+  didn't collapse.
 
-### Session 2 findings: interviews + tickets (`00-rook/feedback/`)
-- **Interviews** (4 handlers, Sofia's console research, 2–5 Sept): offers
-  vanishing (3 of 4), handlers can't tell a callout is live (3 of 4), going
-  quiet (2 of 4), and one overloaded responder (Kip's The Gale). The tickets
-  never mention alerting or overload.
-- **Tickets** (25, 13 Aug–5 Sept, 12 responders): **count responders, not
-  tickets** (quiet responders file repeatedly). By responder: 7 have both
-  problems, 4 quiet only, 1 vanish only. With 11 of 12 quiet, that overlap is
-  what chance predicts, so the tickets can't prove the two are linked. No
-  pre-4.2 tickets exist, so "new since 4.2" rests on filers' memories.
-- **The two sources cover different people.** Only Captain Vantage appears
-  in both, and together they cover all 16 responders. Most of the
-  disagreement comes from who was included. Ambrose's ticket (T-001) and his
-  interview give different details for the same story; trust the ticket.
-- **Claim both sources support:** since around August, some responders go
-  quiet for long stretches, offers vanish before they can answer, the two often
-  hit the same people, and nobody can see why. Cause, size and trend need the
-  data and code.
-- A plain-language priority page of the interview signals is published at
-  https://claude.ai/artifact/9JncqSoyU1P7Kfz8HGCe7Q (private).
+**Code:** 4.2 changed the weights to 0.60 proximity, 0.25 acceptance, 0.15
+capability (they were 0.45 / 0.40 / 0.15).
+- A timeout costs −0.12, the same as a decline, even when the phone never
+  showed the offer. Accepting earns +0.08.
+- The score never recovers except by accepting (Wen's 2019 TODO). The glossary
+  *also* says timeouts lower the score, but it promises a recovery the code
+  doesn't have.
+- The 60-second clock starts when the server sends the offer, not when the
+  phone shows it.
+
+**Interviews and tickets:** count responders, not tickets.
+- Interviews (4 handlers): vanishing 3 of 4, can't see live callouts 3 of 4,
+  quiet 2 of 4, and one overloaded responder (The Gale).
+- Tickets (25 tickets, 12 responders): 7 report both problems, 4 quiet only,
+  1 vanish only.
+- The two sources cover different people; only Captain Vantage appears in both.
+
+**Conflict:** 18 of 25 tickets contradict the data.
+- 7 responders (Nightwell, Ironvale, Stormwrack, Falkirk, Cindermark, The
+  Drift, The Longcast) say they went quiet, but their offers *rose*.
+- The data matches the other sources only for the collapsed four and The Gale.
+- Tickets say offers vanish "in seconds," which the code can't do.
+
+**5-analyst debate (30 Sept):**
+- All five agree 4.2 caused it, not the season. The mechanism: the reweighting
+  removed the acceptance-score cushion, the 60s timer added misses, and the
+  penalty has no recovery.
+- They split on which factor dominates (proximity vs. penalty).
+- Needed to settle it:
+  1. A per-offer log (sent / shown on phone / outcome) and what `pings_sent`
+     counts. Ravi.
+  2. Score history and travel times for the four vs. Bulwark. Wen.
+  3. Nightwell's actual assignments for 12–22 Aug. This is the quickest test
+     of data vs. tickets.
+
+**Other:** the roadmap says the routing change was "Internal," while the
+release notes say responders asked for it. Interview priority page:
+https://claude.ai/artifact/9JncqSoyU1P7Kfz8HGCe7Q (private).
 
 ### How to help me
 - I'm new to PM terminology. Explain terms plainly and label your own
   shorthand as yours. Visual summaries at a simple reading level help me.
 - Say what each claim rests on (which source, and how many people) and what
-  it can't show.
+  it can't show. For calculations, show the rows and the arithmetic.
 - Separate what the documents say from interpretation and cite files.
   Challenge inherited conclusions against the data, tickets and code.
 - Git isn't on PATH. Use
