@@ -51,84 +51,84 @@ Raghunathan, who left 21 Aug with no overlap. Sources: `00-rook/`.
 | Ravi Menon | Data Analyst (#data) | Official weekly numbers (not Marcus, despite Priya's note) |
 
 ### Vocabulary
-- **Callout offer:** one callout pushed to one responder's phone.
-- **Callout timeout** ("ping timeout"): how long an offer stays live, the same
-  for everyone. Now 60s.
-- **Routing priority:** the ranking score. Inputs are proximity (travel time,
-  0 beyond 45 min), capability match and recent acceptance.
-- **"The change to who gets pinged":** the 4.2 routing weight rebalance.
+- **Callout offer / ping:** one callout pushed to one responder's phone.
+- **Callout timeout** ("ping timeout"): how long an offer stays live (now 60s).
+- **Routing priority:** the ranking score: proximity (0 beyond 45 min),
+  capability and recent acceptance.
+- **"The change to who gets pinged":** the 4.2 weight rebalance.
 - **Capability tags:** flight, structural-entry, hazmat-tolerant, cold-weather,
   aquatic, crowd-management, de-escalation.
 
 ### Where things stand
-**Release 4.2 (12 Aug)** weighted proximity up and recent acceptance down, cut
-the timeout from 90s to 60s, and added console filter persistence (expect
-cosmetic tickets). Since then acceptance is down and tickets are about 3×
-normal and flat. Support's split is **⅔ "phone never goes off"** and
-**⅓ "gone before I could answer."**
-
-- **Priya's view:** it's mostly seasonal, so don't revert 4.2. Treat this as a
-  hypothesis; she says she "made calls faster than I checked them."
-- **Marcus's 14 Aug question is unanswered:** was the rebalance meant to hit
-  responders who've been declining?
-- **Availability Confidence** was committed for 4.2 but didn't ship. I still
-  need to confirm with Helen which squeezed items remain Q3 commitments.
+**Release 4.2 (12 Aug)** made the routing changes below and added console filter
+persistence (expect cosmetic tickets). Since then tickets are about 3× normal:
+⅔ "phone never goes off," ⅓ "gone before I could answer."
+- **Priya's "it's seasonal, don't revert" is a hypothesis.** No source supports it.
+- **Availability Confidence** was committed for 4.2 but didn't ship. Confirm
+  with Helen which squeezed items remain Q3 commitments.
 - **Nobody has written down how routing works.** That's on me.
-- The team is deliberately waiting for my read before drawing conclusions.
+- The team is waiting for my read before drawing conclusions.
 
-### Findings so far (sessions 1–3, not yet verified with the team)
-**Data** (`data/callout-history.csv`, 16 responders × 10 weeks). By default,
-exclude the week of 10 Aug, since it straddles the release. That choice moves
-the size of the drop (3–12 points) but none of the conclusions.
-- Acceptance held at 75–78% for 6 weeks, fell to 54% in the release week, and
-  was 68.5% after. That's a sudden drop, not a seasonal shape, and there are
-  no prior-year rows to test "seasonal."
+### Findings so far (sessions 1–4, not yet verified with the team)
+**Data** (`data/callout-history.csv`, 16 responders × 10 weeks). Exclude the
+week of 10 Aug by default; it changes the size of the drop, not the
+conclusions.
+- Acceptance: 75–78% for 6 weeks, 54% in release week, 68.5% after. A sudden
+  drop, not seasonal; there's no prior-year data.
 - Offers were moved, not lost (about 172 → 162 a week).
   - **4 collapsed and never recovered:** Farlight, Meteor Mite, The Undertow,
     Vesper (about 12 a week → 0–1).
-  - 10 of the other 12 gained 19–49%. Halfmoon and Ashgrove dropped about 25%,
+  - 10 of the other 12 gained 19–49%. Halfmoon and Ashgrove fell about 25%,
     then held.
 - For the four, acceptance fell first (42% in release week), and offers fell
-  the week after. Sgt. Bulwark missed 50% in release week like Vesper, but
-  didn't collapse.
+  the week after. Bulwark missed 50% like Vesper and didn't collapse.
+- **Nobody accepted below 60% before 4.2.** Acceptance before 4.2 barely
+  predicts who lost pings (0.28); release-week acceptance strongly does (0.84).
 
-**Code:** 4.2 changed the weights to 0.60 proximity, 0.25 acceptance, 0.15
-capability (they were 0.45 / 0.40 / 0.15).
-- A timeout costs −0.12, the same as a decline, even when the phone never
-  showed the offer. Accepting earns +0.08.
-- The score never recovers except by accepting (Wen's 2019 TODO). The glossary
-  *also* says timeouts lower the score, but it promises a recovery the code
-  doesn't have.
-- The 60-second clock starts when the server sends the offer, not when the
-  phone shows it.
+**Code** (`code/dispatch-routing/`). There's one commit, so the 4.2 changes come
+from the "was…" notes in `config.py`: weights 0.60 proximity / 0.25 acceptance /
+0.15 capability (were 0.45 / 0.40 / 0.15), and the timer went from 90s to 60s.
+- **The same rules apply to every responder**, including existing decliners.
+  That answers half of Marcus's 14 Aug question; the intent is still open.
+- **Points off:** −0.12 for any "not yes" (`history.py:39`). That includes
+  timeouts, late or failed delivery, the wrong device and a late "yes"
+  (`offer.py`: the clock starts at send, and delivery is never checked).
+- **Points on:** only +0.08, for accepting (`history.py:27`). Break-even is
+  60% acceptance.
+- **"Recent acceptance" has no sense of time.** No fading, window or dates
+  (Wen's 2019 TODO). It reflects roughly the last 9–13 offers, silence freezes
+  it, and the glossary promises a recovery the code lacks.
+- **No safety nets:** no rotation for low scorers and no alerts. Scores live
+  only in memory (`_scores`), so the repo can't show whether the 4.2 deploy
+  reset everyone to 0.5.
+- **Simulation** (real rules, made-up responders): the 60s window is the
+  trigger, and the weights *soften* the spiral. The shipped combination
+  predicts slides, not collapses, so the four likely need an extra factor
+  (location or delivery).
 
-**Interviews and tickets:** count responders, not tickets.
-- Interviews (4 handlers): vanishing 3 of 4, can't see live callouts 3 of 4,
-  quiet 2 of 4, and one overloaded responder (The Gale).
-- Tickets (25 tickets, 12 responders): 7 report both problems, 4 quiet only,
-  1 vanish only.
-- The two sources cover different people; only Captain Vantage appears in both.
+**Interviews and tickets** (count responders, not tickets):
+- **Interviews:** vanishing 3 of 4, can't see live callouts 3 of 4, quiet 2 of
+  4, and The Gale overloaded.
+- **Tickets:** 12 responders; 7 report both problems, 4 quiet only, 1 vanish
+  only.
+- **18 of 25 tickets contradict the data.** Seven responders (Nightwell,
+  Ironvale, Stormwrack and others) say they went quiet, but their offers *rose*.
+  The code can't make offers vanish "in seconds."
 
-**Conflict:** 18 of 25 tickets contradict the data.
-- 7 responders (Nightwell, Ironvale, Stormwrack, Falkirk, Cindermark, The
-  Drift, The Longcast) say they went quiet, but their offers *rose*.
-- The data matches the other sources only for the collapsed four and The Gale.
-- Tickets say offers vanish "in seconds," which the code can't do.
+**Five-analyst debate (30 Sept):** all agreed 4.2 caused it, not the season,
+through the reweighting + the 60s timer + a penalty with no recovery. They split
+on which factor dominates.
 
-**5-analyst debate (30 Sept):**
-- All five agree 4.2 caused it, not the season. The mechanism: the reweighting
-  removed the acceptance-score cushion, the 60s timer added misses, and the
-  penalty has no recovery.
-- They split on which factor dominates (proximity vs. penalty).
-- Needed to settle it:
-  1. A per-offer log (sent / shown on phone / outcome) and what `pings_sent`
-     counts. Ravi.
-  2. Score history and travel times for the four vs. Bulwark. Wen.
-  3. Nightwell's actual assignments for 12–22 Aug. This is the quickest test
-     of data vs. tickets.
+**Open asks:**
+1. Ravi: a per-offer log (sent / shown on phone / outcome) and what
+   `pings_sent` counts.
+2. Wen: score history and travel times for the four vs. Bulwark; whether live
+   matches the repo; whether scores survived the deploy.
+3. Ravi or Nadia: Nightwell's actual assignments for 12–22 Aug, the quickest
+   data-vs-tickets test.
 
-**Other:** the roadmap says the routing change was "Internal," while the
-release notes say responders asked for it. Interview priority page:
+**Other:** the roadmap says the routing change was "Internal," while the release
+notes say responders asked for it. Interview priority page:
 https://claude.ai/artifact/9JncqSoyU1P7Kfz8HGCe7Q (private).
 
 ### How to help me
