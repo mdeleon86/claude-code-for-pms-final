@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Back in Rotation</title>
+<style>
+  :root {
+    color-scheme: light;
+    --ground: #EEF1F3;
+    --surface: #FFFFFF;
+    --surface-2: #F6F8F9;
+    --ink: #16212A;
+    --ink-soft: #55636E;
+    --line: #D5DCE1;
+    --accent: #1E5F8C;
+    --accent-ink: #FFFFFF;
+    --quiet: #A4620A;
+    --quiet-tint: #FBF0DD;
+    --good: #24774A;
+    --good-tint: #E2F2E8;
+    --warn: #B2392E;
+    --warn-tint: #FBE6E3;
+    --info: #47607A;
+    --info-tint: #E6ECF3;
+    --bar: #9FB0BD;
+    --bar-hi: #1E5F8C;
+    --phone: #0F171D;
+    --phone-screen: #FFFFFF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #10171C; --surface: #182229; --surface-2: #1F2B33; --ink: #E5ECEF; --ink-soft: #9FB0BA;
+      --line: #2C3A44; --accent: #6FB2E0; --accent-ink: #0B1318; --quiet: #E7A74A; --quiet-tint: #37290F;
+      --good: #6CC891; --good-tint: #163323; --warn: #F08A7E; --warn-tint: #3A1E1B; --info: #A9BED3; --info-tint: #22303D;
+      --bar: #4A5C68; --bar-hi: #6FB2E0; --phone: #05090C; --phone-screen: #182229;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #10171C; --surface: #182229; --surface-2: #1F2B33; --ink: #E5ECEF; --ink-soft: #9FB0BA;
+    --line: #2C3A44; --accent: #6FB2E0; --accent-ink: #0B1318; --quiet: #E7A74A; --quiet-tint: #37290F;
+    --good: #6CC891; --good-tint: #163323; --warn: #F08A7E; --warn-tint: #3A1E1B; --info: #A9BED3; --info-tint: #22303D;
+    --bar: #4A5C68; --bar-hi: #6FB2E0; --phone: #05090C; --phone-screen: #182229;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--ground); color: var(--ink);
+    font: 15px/1.5 "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    padding: 0 16px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding-block: 24px 48px; display: grid; gap: 20px; }
+  h1, h2, h3 { margin: 0; line-height: 1.2; text-wrap: balance; }
+  p { margin: 0; }
+  button { font: inherit; cursor: pointer; }
+  button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .muted { color: var(--ink-soft); }
+  .small { font-size: 13px; }
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+
+  /* Header */
+  header.top { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: end; justify-content: space-between; }
+  header.top h1 { font-size: 26px; }
+  .proto-badge { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--info-tint); color: var(--info); }
+
+  /* Guide */
+  .guide { background: var(--info-tint); border-radius: 12px; padding: 14px 16px; display: grid; gap: 8px; }
+  .guide ol { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+
+  /* Controls */
+  .controls { background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; }
+  .controls .group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button { border: 0; background: var(--surface); color: var(--ink); padding: 6px 12px; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  .btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 7px 14px; border-radius: 8px; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* Stage */
+  .stage { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+  @media (max-width: 900px) { .stage { grid-template-columns: 1fr; } .phone-col { justify-self: center; } }
+  .where { display: flex; gap: 8px; align-items: baseline; margin-bottom: 8px; }
+  .where b { font-size: 14px; }
+
+  /* Console */
+  .console { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .console-bar { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--surface-2); flex-wrap: wrap; }
+  .console-bar .tabs { display: flex; gap: 14px; font-size: 13px; }
+  .console-bar .tabs span.on { font-weight: 700; border-bottom: 2px solid var(--accent); }
+  .console-body { padding: 16px; display: grid; gap: 14px; }
+  .alert { border-radius: 10px; padding: 12px 14px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .alert.live { background: var(--warn-tint); color: var(--ink); border: 1px solid var(--warn); }
+  .alert.done { background: var(--surface-2); border: 1px solid var(--line); }
+  .alert .bell { font-weight: 700; color: var(--warn); }
+  @media (prefers-reduced-motion: no-preference) { .alert.live .bell { animation: ring 1s ease-in-out infinite; } }
+  @keyframes ring { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+  .card { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; align-content: start; background: var(--surface); }
+  .card-head { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+  .card-head h3 { font-size: 17px; }
+  .pill { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill.quiet { background: var(--quiet-tint); color: var(--quiet); }
+  .pill.good { background: var(--good-tint); color: var(--good); }
+  .pill.busy { background: var(--warn-tint); color: var(--warn); }
+  .pill.info { background: var(--info-tint); color: var(--info); }
+  .pill.ready { background: var(--good-tint); color: var(--good); }
+  .pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .flag { border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; }
+  .flag.quiet { background: var(--quiet-tint); }
+  .flag.good { background: var(--good-tint); }
+  .flag.info { background: var(--info-tint); }
+  .flag.busy { background: var(--warn-tint); }
+  .progress { height: 10px; border-radius: 999px; background: var(--line); overflow: hidden; }
+  .progress > div { height: 100%; background: var(--good); border-radius: 999px; transition: width .4s ease; }
+  @media (prefers-reduced-motion: reduce) { .progress > div { transition: none; } }
+  .linkish { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+  .details { border-top: 1px solid var(--line); padding-top: 10px; display: grid; gap: 8px; }
+  .spark { width: 100%; height: 64px; display: block; }
+  .spark text { fill: var(--ink-soft); font-size: 9px; font-family: inherit; }
+
+  /* Phone */
+  .phone { width: 320px; max-width: 100%; background: var(--phone); border-radius: 36px; padding: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+  .screen { background: var(--phone-screen); color: var(--ink); border-radius: 26px; min-height: 560px; padding: 18px 16px; display: grid; gap: 14px; align-content: start; }
+  .statusbar { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-soft); }
+  .app-title { display: flex; justify-content: space-between; align-items: center; }
+  .app-title h2 { font-size: 18px; }
+  .ph-card { border-radius: 14px; padding: 14px; display: grid; gap: 10px; background: var(--surface-2); }
+  .big { font-size: 20px; font-weight: 700; line-height: 1.25; }
+  .ph-btn { width: 100%; padding: 12px; border-radius: 12px; border: 0; font-weight: 700; font-size: 16px; }
+  .ph-btn.go { background: var(--good); color: #fff; }
+  .ph-btn.alt { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+  .ph-btn.no { background: var(--surface); color: var(--warn); border: 1px solid var(--warn); }
+  .offer { border: 2px solid var(--warn); background: var(--warn-tint); }
+  .count { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+  /* Toast */
+  .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 10px; max-width: calc(100% - 32px); font-size: 14px; }
+
+  /* Compare the rules */
+  .compare { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 14px; }
+  .compare h2 { font-size: 20px; }
+  .cmp-controls { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; }
+  .cmp-controls .group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .cmp-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .cmp-grid { grid-template-columns: 1fr; } }
+  .chart-wrap { overflow-x: auto; }
+  #cmpChart { width: 100%; min-width: 540px; height: auto; display: block; }
+  #cmpChart text { fill: var(--ink-soft); font-size: 11px; font-family: inherit; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; margin-top: 6px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { display: inline-block; width: 22px; }
+  .sw.real { height: 10px; border-radius: 2px; background: var(--bar); }
+  .sw.cur { height: 0; border-top: 3px dashed var(--warn); }
+  .sw.prop { height: 0; border-top: 3px solid var(--good); }
+  .sw.sim { height: 10px; border-radius: 2px; background: var(--surface-2); border: 1px dashed var(--line); }
+  .rule-cards { display: grid; gap: 10px; }
+  .rule-card { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 8px; }
+  .kv { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .kv dt { color: var(--ink-soft); }
+  .kv dd { margin: 0; font-weight: 600; text-align: right; }
+  .verdict { background: var(--surface-2); border-radius: 10px; padding: 12px; display: grid; gap: 6px; }
+  details.how summary { cursor: pointer; font-weight: 600; }
+  details.how ul { margin: 8px 0 0; padding-left: 1.2em; display: grid; gap: 4px; }
+
+  /* Rule lab */
+  .lab { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 18px; }
+  .lab h2 { font-size: 20px; }
+  .lab h3 { font-size: 17px; }
+  .lab-part { display: grid; gap: 10px; }
+  .sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .slider { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 8px; background: var(--surface-2); align-content: start; }
+  .slider label { font-weight: 700; }
+  .slider .val { font-weight: 700; color: var(--accent); }
+  .slider input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-soft); gap: 8px; }
+  .table-wrap { overflow-x: auto; }
+  .rl-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 760px; font-variant-numeric: tabular-nums; }
+  .rl-table th, .rl-table td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+  .rl-table th { font-size: 12px; color: var(--ink-soft); font-weight: 700; }
+  .rl-table tr.sel td { background: var(--info-tint); }
+  .score { display: inline-flex; align-items: center; gap: 8px; }
+  .meter { width: 56px; height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; display: inline-block; }
+  .meter i { display: block; height: 100%; background: var(--accent); }
+  td.best { font-weight: 700; }
+  td.best .meter i { background: var(--good); }
+  .rowbtn { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; font-weight: 600; text-align: left; }
+  #rlChart { width: 100%; min-width: 560px; height: auto; display: block; }
+  #rlChart text { fill: var(--ink-soft); font-size: 11px; font-family: inherit; }
+  .rl-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; }
+  .rl-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+  .dec-card { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 6px; }
+  .result { background: var(--surface-2); border-radius: 10px; padding: 12px; display: grid; gap: 6px; }
+
+  /* Notes */
+  .notes { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px; }
+  .notes ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div style="display:grid; gap:6px;">
+      <span class="eyebrow">Rook Dispatch · Back in Rotation</span>
+      <h1>What Kip and Meteor Mite would see</h1>
+      <p class="muted">Two places this happens: Kip's web console (left) and Mite's phone (right). Click around.</p>
+    </div>
+    <span class="proto-badge">Prototype screens only · nothing here is built · fictional scenario</span>
+  </header>
+
+  <section class="guide" aria-label="Start here">
+    <span class="eyebrow">Start here · about 2 minutes</span>
+    <ol class="small">
+      <li>On <b>Mite's phone</b> (right), tap <b>Ready now</b>. Kip's card on the left gets a "By the phone" tag. It doesn't move Mite up the list.</li>
+      <li>Click <b>Send Mite a callout</b>. Kip's console rings and Mite's phone counts down from 60. Try <b>Accept</b>, <b>Decline</b>, or let it time out, and watch Mite's score change.</li>
+      <li>Use <b>Jump to +7 / +14 days</b> to watch the score heal. Then switch the <b>Scenario</b> to see what Kip sees if offers still don't come back.</li>
+    </ol>
+    <p class="small muted">Want the analysis? Scroll down to <b>Simulation A</b> (Mite's possible next 8 weeks) and <b>Simulation B</b> (the Rule lab: six real responders, three sliders and the Decliner Test).</p>
+  </section>
+
+  <section class="controls" aria-label="Prototype controls">
+    <span class="eyebrow">Prototype controls</span>
+    <div class="group">
+      <span class="small muted">Jump to:</span>
+      <div class="seg" role="group" aria-label="Day">
+        <button type="button" data-day="0" aria-pressed="true">Day 0 (switched on)</button>
+        <button type="button" data-day="7" aria-pressed="false">+7 days</button>
+        <button type="button" data-day="14" aria-pressed="false">+14 days</button>
+      </div>
+    </div>
+    <div class="group">
+      <span class="small muted">Scenario:</span>
+      <div class="seg" role="group" aria-label="Scenario">
+        <button type="button" data-scen="works" aria-pressed="true">Offers come back</button>
+        <button type="button" data-scen="distance" aria-pressed="false">Score heals, offers don't</button>
+      </div>
+    </div>
+    <div class="group">
+      <button type="button" class="btn primary" id="sendCallout">Send Mite a callout</button>
+      <button type="button" class="btn" id="resetAll">Reset</button>
+    </div>
+  </section>
+
+  <div class="stage">
+    <section aria-label="Kip's web console">
+      <div class="where"><b>Where: Kip's web console</b><span class="small muted">· coverage view, center monitor</span></div>
+      <div class="console">
+        <div class="console-bar">
+          <div class="tabs"><span class="on">Coverage</span><span class="muted">Incidents</span><span class="muted">Responders</span></div>
+          <span class="small muted">Handler: Kip</span>
+        </div>
+        <div class="console-body">
+          <div id="liveAlert" aria-live="assertive"></div>
+          <div class="cards">
+            <article class="card" id="miteCard"></article>
+            <article class="card" id="galeCard"></article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="phone-col" aria-label="Meteor Mite's phone">
+      <div class="where"><b>Where: Meteor Mite's phone</b><span class="small muted">· Rook mobile app</span></div>
+      <div class="phone"><div class="screen" id="phone"></div></div>
+    </section>
+  </div>
+
+  <section class="compare" aria-labelledby="cmpTitle">
+    <div style="display:grid; gap:4px;">
+      <span class="eyebrow">Simulation A · Compare the rules</span>
+      <h2 id="cmpTitle">What could happen to Meteor Mite's offers: today's rules vs. Back in Rotation</h2>
+      <p class="small muted"><b>Grey bars are real</b> (the callout export, through 31 Aug). <b>The lines after 31 Aug are an illustrative simulation</b>, not a forecast and not real data.</p>
+      <div class="result small">
+        <p><b>This section has its own two controls.</b> The Rule lab sliders further down don't change it. It uses fixed values that match the Rule lab's starting settings: a timeout costs 0.06 (half of a "no"), and "Medium" healing gets halfway back to the middle in 5 days.</p>
+        <p><b>Biggest assumption:</b> it assumes a score of 0.5 is enough to win Mite his old number of offers. That's the most hopeful case, and it's unproven. Responders who say yes often score near 1.0, so a score of 0.5 could still leave him behind them.</p>
+      </div>
+    </div>
+
+    <div class="cmp-controls">
+      <div class="group">
+        <span class="small muted">When Mite is offered work, he…</span>
+        <div class="seg" role="group" aria-label="How Mite responds to offers">
+          <button type="button" data-beh="normal" aria-pressed="true">Answers like before 4.2</button>
+          <button type="button" data-beh="timeouts" aria-pressed="false">Keeps timing out</button>
+          <button type="button" data-beh="mostly" aria-pressed="false">Mostly misses</button>
+        </div>
+      </div>
+      <div class="group">
+        <span class="small muted">Healing speed (Back in Rotation):</span>
+        <div class="seg" role="group" aria-label="Healing speed">
+          <button type="button" data-heal="slow" aria-pressed="false">Slow</button>
+          <button type="button" data-heal="medium" aria-pressed="true">Medium</button>
+          <button type="button" data-heal="fast" aria-pressed="false">Fast</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cmp-grid">
+      <div>
+        <div class="chart-wrap"><svg id="cmpChart" viewBox="0 0 760 290" role="img" aria-label=""></svg></div>
+        <div class="legend">
+          <span><i class="sw real"></i>Real offers per week</span>
+          <span><i class="sw cur"></i>Simulated: today's 4.2 rules</span>
+          <span><i class="sw prop"></i>Simulated: Back in Rotation</span>
+          <span><i class="sw sim"></i>Simulated period</span>
+        </div>
+      </div>
+      <div class="rule-cards">
+        <div class="verdict" aria-live="polite"><span class="eyebrow">In plain words</span><p id="cmpVerdict"></p><p id="cmpCost" class="small"></p></div>
+        <div class="rule-card"><div class="card-head"><b>Today's 4.2 rules</b><span class="pill busy">current</span></div><dl class="kv" id="cmpCur"></dl></div>
+        <div class="rule-card"><div class="card-head"><b>Back in Rotation</b><span class="pill good">proposed</span></div><dl class="kv" id="cmpProp"></dl></div>
+      </div>
+    </div>
+
+    <details class="how small">
+      <summary>How this simulation works (assumptions)</summary>
+      <ul>
+        <li><b>Starting point is real:</b> Mite got 1 offer the week of 31 Aug. Since the release week he accepted 5 of 17 offers and missed 12, which would sink his track record to the floor, so the simulation starts it at <b>0</b>.</li>
+        <li><b>Today's rules are from the code</b> (<code>config.py</code>, <code>history.py</code>): +0.08 for accepting, −0.12 for a "no" <i>or</i> a timeout, kept between 0 and 1, and no healing.</li>
+        <li><b>Back in Rotation values are placeholders</b> for Wen to decide: a timeout costs −0.06 (half of today), a "no" still costs −0.12, and a low score heals halfway back to 0.5 every <b>10 / 5 / 3 days</b> (slow / medium / fast).</li>
+        <li><b>The biggest assumption, offers vs. track record:</b> at 0 he gets about 1 offer a week (as in late Aug), and at 0.5 or above about 11 (his usual before 4.2), in a straight line between. The real relationship depends on distance and other responders, which we don't have.</li>
+        <li><b>How Mite responds:</b> "Like before 4.2" uses his real pre-release acceptance (46 of 67 = 69%), so 70% accept, 20% time out, 10% decline. "Keeps timing out": 40% / 50% / 10%. "Mostly misses": 20% / 70% / 10%.</li>
+        <li><b>Averages, not chance.</b> Each week uses expected numbers, so the same settings always give the same result. "Reaches 10+ offers a week" depends on the score-to-offers assumption above. It isn't a promise.</li>
+      </ul>
+    </details>
+  </section>
+
+  <section class="lab" aria-labelledby="labTitle">
+    <div style="display:grid; gap:4px;">
+      <span class="eyebrow">Simulation B · Rule lab</span>
+      <h2 id="labTitle">Test the two changes on six real responders</h2>
+      <p class="small muted">Every responder has a <b>score</b> from 0 to 1. A higher score puts them nearer the top of the list. Everyone starts in the middle, at 0.5.</p>
+      <div class="result small"><p><b>These three sliders only change Simulation B</b> (the table and the Decliner Test below). They don't change Simulation A above. Simulation B shows <b>scores</b>, not offers. A higher score doesn't prove someone would get more offers.</p></div>
+    </div>
+
+    <div class="sliders">
+      <div class="slider">
+        <label for="slShare">When they didn't say yes, how often was it because time ran out?</label>
+        <span class="val" id="slShareVal"></span>
+        <input type="range" id="slShare" min="0" max="100" step="10" value="50">
+        <div class="ends"><span>Always a real "no"</span><span>Always ran out of time</span></div>
+        <p class="small">Our records only say "didn't say yes." They don't say <i>why</i>. So this is a guess. Slide right if you think most people were too slow or never saw the buzz. Slide left if you think most people said "no" on purpose.</p>
+        <p class="small muted" id="slShareNote"></p>
+      </div>
+      <div class="slider">
+        <label for="slRatio">How much should running out of time hurt, compared with saying "no"?</label>
+        <span class="val" id="slRatioVal"></span>
+        <input type="range" id="slRatio" min="0" max="100" step="10" value="50">
+        <div class="ends"><span>Doesn't hurt at all</span><span>Hurts the same as "no" (today)</span></div>
+        <p class="small">Today, running out of time hurts your score exactly as much as saying "no." Slide left to make it hurt less. Saying "no" on purpose always costs the full amount.</p>
+        <p class="small muted" id="slRatioNote"></p>
+      </div>
+      <div class="slider">
+        <label for="slHalf">How fast should a low score heal by itself?</label>
+        <span class="val" id="slHalfVal"></span>
+        <input type="range" id="slHalf" min="1" max="30" step="1" value="5">
+        <div class="ends"><span>Very fast</span><span>Very slow</span></div>
+        <p class="small">Today, a low score never heals on its own. With this change, it climbs back toward the middle (0.5) a little every day, even with no offers. It never heals past the middle.</p>
+        <p class="small muted" id="slHalfNote"></p>
+      </div>
+    </div>
+
+    <div class="lab-part">
+      <h3>1. Six real responders, four sets of rules</h3>
+      <p class="small">We replay what <b>really happened</b> to each responder: their real offers and real "yes" answers each week from 29 Jun to 31 Aug, under four different rules. Then we show the score each rule would have given them by 31 Aug.</p>
+      <div class="table-wrap">
+        <table class="rl-table">
+          <thead><tr>
+            <th scope="col">Responder (click for chart)</th>
+            <th scope="col">Real offers a week<br>before → after 4.2</th>
+            <th scope="col">Score before 4.2<br>(week of 3 Aug)</th>
+            <th scope="col">Today's 4.2 rules</th>
+            <th scope="col">Healing only</th>
+            <th scope="col">Lighter timeouts only</th>
+            <th scope="col">Both changes</th>
+          </tr></thead>
+          <tbody id="rlBody"></tbody>
+        </table>
+      </div>
+      <div class="result" aria-live="polite"><span class="eyebrow">What made the biggest difference</span><p id="rlSummary"></p></div>
+      <div class="result small"><span class="eyebrow">Open design question (not decided)</span><p>Healing stops at the middle (0.5). Responders who say yes often score near 1.0, so even "both changes" leaves the four at about 0.45, still behind them. Should healing stop at 0.5, or aim for a typical responder's score? Aiming higher brings people back faster, but makes it easier for someone who refuses work to bounce back. <b>We need Wen's real score data before deciding.</b></p></div>
+      <div class="chart-wrap"><svg id="rlChart" viewBox="0 0 760 300" role="img" aria-label=""></svg></div>
+      <div class="rl-legend" id="rlLegend"></div>
+    </div>
+
+    <div class="lab-part">
+      <h3>2. The Decliner Test</h3>
+      <p class="small">Does healing reward someone who keeps saying "no" on purpose? This <b>made-up</b> responder gets 10 offers every week and says "no" to every one, for 10 weeks. For comparison, a reliable responder gets the same 10 offers and says yes to 7.</p>
+      <p class="small muted">This is a stress test. It keeps sending 10 offers a week even as the score drops, which real routing wouldn't do. The scores shown are the ones the decliner has at the moment each offer arrives.</p>
+      <div class="dec-grid" id="decGrid"></div>
+      <div class="result" aria-live="polite"><span class="eyebrow">Does it reward refusing work?</span><p id="decVerdict"></p></div>
+    </div>
+
+    <details class="how small">
+      <summary>What's real and what's assumed in the Rule lab</summary>
+      <ul>
+        <li><b>Real:</b> each responder's weekly offers and "yes" answers, 29 Jun–31 Aug, from <code>callout-history.csv</code>. Nothing is filled in. Farlight really got 0 offers in the week of 31 Aug.</li>
+        <li><b>Real rules (from the code):</b> +0.08 for yes, −0.12 for anything else, a score between 0 and 1, and new responders start at 0.5 (<code>config.py</code>, <code>history.py</code>, <code>offer.py</code>).</li>
+        <li><b>Not in the data:</b> whether each miss was a timeout or a real "no." Slider 1 is a guess, applied the same way to everyone.</li>
+        <li><b>Assumed:</b> everyone starts at 0.5 on 29 Jun, because their real score isn't recorded. Inside each week, offers are spread evenly across the 7 days, with yes answers spread evenly among them. Healing happens a little each day.</li>
+        <li><b>The replay keeps their real offers fixed.</b> It shows how each rule would have <i>scored</i> the same history. It doesn't show how many offers they would have got with a higher score, and it isn't a prediction of real dispatch results.</li>
+        <li><b>Placeholder values:</b> the healing speed and the timeout discount are still Wen's decision.</li>
+      </ul>
+    </details>
+  </section>
+
+  <section class="notes">
+    <h2 style="font-size:17px;">What's real and what's made up</h2>
+    <ul class="small">
+      <li><b>Real data:</b> Meteor Mite's and The Gale's weekly offers (29 Jun–31 Aug) come from <code>00-rook/data/callout-history.csv</code>.</li>
+      <li><b>Proposed, not built:</b> scores healing over time toward neutral, and a timeout costing less than a deliberate "no." Speeds and amounts are still Wen's call.</li>
+      <li><b>Calculated, using placeholder rules:</b> Mite's score on the console and phone. It starts at 0 on day 0, heals halfway back toward 0.5 every 5 days, and changes with your clicks: +0.08 for accept, −0.12 for decline, −0.06 for a timeout. It never goes above the middle (0.5) by healing alone.</li>
+      <li><b>Illustrative:</b> whether offers come back at +14 days (the two scenarios), The Gale easing, the 11-minute incident, and every line after 31 Aug in Simulation A.</li>
+      <li><b>Response time:</b> only a timeout holds a job up (up to 60 seconds). A deliberate "no" passes it on right away.</li>
+      <li><b>"Ready now" is a heads-up only.</b> It tells Kip that Mite is by the phone. It never moves Mite up the list.</li>
+      <li><b>Open question:</b> the "gone quiet" flag depends on what <code>pings_sent</code> counts. That needs confirming with Ravi before this could be built.</li>
+    </ul>
+  </section>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function () {
+  var weeks = ['29 Jun','6 Jul','13 Jul','20 Jul','27 Jul','3 Aug','10 Aug','17 Aug','24 Aug','31 Aug'];
+  var mite = [11,12,10,11,12,11,10,4,2,1];
+  var gale = [13,12,13,14,13,13,15,17,20,21];
+  // Proposed rules (placeholders): heal halfway back toward 0.5 every 5 days; +0.08 accept, -0.12 "no", -0.06 timeout.
+  var HALF = 5, MID = 0.5, ACCEPT = 0.08, DECLINE = 0.12, TIMEOUT = 0.06;
+
+  var state;
+  function fresh() { return { day: 0, scen: 'works', ready: false, events: [], callout: null, last: null, accepted: 0 }; }
+  state = fresh();
+  var timer = null;
+
+  function $(id) { return document.getElementById(id); }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function f2(v) { return v.toFixed(2); }
+  // Mite's score starts at 0 on day 0 (his real Aug misses sink it to the floor), then heals daily; clicked outcomes apply on the day they happen.
+  function scoreAt(day) {
+    var s = 0;
+    for (var t = 0; t <= day; t++) {
+      if (t > 0 && s < MID) s = MID - (MID - s) * Math.pow(0.5, 1 / HALF);
+      for (var i = 0; i < state.events.length; i++) if (state.events[i].day === t) s = clamp(s + state.events[i].delta, 0, 1);
+    }
+    return s;
+  }
+  function score() { return scoreAt(state.day); }
+  function scoreBar(label) {
+    var s = score(), pct = Math.round(Math.min(1, s / MID) * 100);
+    return '<div><div class="small" style="display:flex;justify-content:space-between;gap:8px;"><span>' + label + '</span><span>' + f2(s) + ' of 0.50</span></div>' +
+      '<div class="progress" role="progressbar" aria-label="Score compared with the middle (0.5)" aria-valuemin="0" aria-valuemax="0.5" aria-valuenow="' + f2(s) + '"><div style="width:' + pct + '%"></div></div></div>';
+  }
+
+  function spark(data, color) {
+    var w = 280, h = 64, n = data.length, gap = 4, bw = (w - gap * (n - 1)) / n, max = 21, top = 6, base = 50;
+    var s = '<svg class="spark" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="Weekly offers, 29 Jun to 31 Aug: ' + data.join(', ') + '">';
+    for (var i = 0; i < n; i++) {
+      var bh = (data[i] / max) * (base - top), x = i * (bw + gap), y = base - bh;
+      var fill = i >= 7 ? color : 'var(--bar)';
+      s += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="2" fill="' + fill + '"></rect>';
+    }
+    var rx = 6 * (bw + gap) + bw / 2;
+    s += '<line x1="' + rx.toFixed(1) + '" x2="' + rx.toFixed(1) + '" y1="2" y2="' + base + '" stroke="var(--warn)" stroke-dasharray="2 2"></line>';
+    s += '<text x="' + (rx + 3).toFixed(1) + '" y="10">4.2 ships</text>';
+    s += '<text x="0" y="62">' + weeks[0] + '</text><text x="' + w + '" y="62" text-anchor="end">' + weeks[n - 1] + '</text>';
+    return s + '</svg>';
+  }
+
+  function miteStatus() {
+    if (state.day === 14 && score() >= 0.4) return state.scen === 'works' ? 'back' : 'distance';
+    return 'quiet';
+  }
+
+  function renderMite() {
+    var st = miteStatus(), html = '';
+    var pills = '';
+    if (st === 'quiet') pills += '<span class="pill quiet">Gone quiet</span>';
+    if (st === 'back') pills += '<span class="pill good">Offers returning</span>';
+    if (st === 'distance') pills += '<span class="pill info">Score healed, still few offers</span>';
+    if (state.ready) pills += '<span class="pill ready">By the phone</span>';
+    html += '<div class="card-head"><div><h3>Meteor Mite</h3><span class="small muted">Responder · handled by Kip</span></div><div class="pills">' + pills + '</div></div>';
+
+    if (st === 'quiet') {
+      html += '<div class="flag quiet"><p><b>3 offers in the last 2 weeks of data</b> (weeks of 24 and 31 Aug). Before 4.2 he got about 11 a week. He missed 12 of his 17 offers from the week of 10 Aug.</p>' +
+        scoreBar('Score, healing back toward the middle') +
+        '<p class="small muted">A higher score isn\'t a promise of more offers. He\'s still asked only when he\'s a good match.</p></div>';
+    } else if (st === 'back') {
+      html += '<div class="flag good"><p><b>Score is back near the middle (' + f2(score()) + ').</b> In this scenario, offers are starting to come back (illustrative).' + (state.accepted ? ' Accepted ' + state.accepted + ' job' + (state.accepted > 1 ? 's' : '') + ' along the way.' : '') + '</p></div>';
+    } else {
+      html += '<div class="flag info"><p><b>Score is back near the middle (' + f2(score()) + '), but still only 1 offer this week</b> (illustrative). Mite is rarely the closest match for incidents right now.</p><p class="small">Suggested next step: talk with Mite about their coverage area.</p></div>';
+    }
+    if (state.last) html += '<p class="small"><b>Last callout:</b> ' + state.last + '</p>';
+    html += '<button type="button" class="linkish small" data-toggle="miteDetails" aria-expanded="' + (!!state.open) + '">' + (state.open ? 'Hide why' : 'Why is Mite quiet?') + '</button>';
+    if (state.open) {
+      html += '<div class="details"><p class="small"><b>Weekly offers</b>, from the callout export:</p>' + spark(mite, 'var(--quiet)') +
+        '<p class="small">From the week of 10 Aug (4.2 shipped that Wednesday), Mite missed 12 of his 17 offers. Each miss lowered his score, which meant fewer offers and fewer chances to accept. With Back in Rotation, his score heals a little every day <b>even without offers</b>, about halfway back to the middle every 5 days (a placeholder speed).</p>' +
+        '<p class="small">Healing stops at the middle (0.5). Responders who say yes often score near 1.0, so a healed score can still rank behind them.</p>' +
+        '<p class="small muted">This never puts Mite ahead of a closer or better-matched responder.</p></div>';
+    }
+    $('miteCard').innerHTML = html;
+  }
+
+  function renderGale() {
+    var easing = state.day === 14 && state.scen === 'works' && score() >= 0.4;
+    var html = '<div class="card-head"><div><h3>The Gale</h3><span class="small muted">Responder · handled by Kip</span></div><div class="pills">' +
+      (easing ? '<span class="pill good">Easing</span>' : '<span class="pill busy">Very busy</span>') + '</div></div>';
+    html += easing
+      ? '<div class="flag good"><p><b>Fewer offers than last week</b> as work spreads back out (illustrative).</p></div>'
+      : '<div class="flag busy"><p><b>21 offers in the last week of data</b> (week of 31 Aug). Usually about 13. Picking up work from quieter responders nearby.</p></div>';
+    html += '<div class="details" style="border-top:0;padding-top:0;"><p class="small"><b>Weekly offers</b>, from the callout export:</p>' + spark(gale, 'var(--warn)') + '</div>';
+    $('galeCard').innerHTML = html;
+  }
+
+  function renderAlert() {
+    var c = state.callout, el = $('liveAlert');
+    if (c) {
+      el.innerHTML = '<div class="alert live"><span><span class="bell" aria-hidden="true">🔔</span> <b>Live callout → Meteor Mite</b> · incident 11 min away · <span class="small">Mite\'s chime</span></span><span class="count" style="font-size:20px;">' + c.left + 's</span></div>';
+    } else if (state.lastAlert) {
+      el.innerHTML = '<div class="alert done small"><span>' + state.lastAlert + '</span><button type="button" class="linkish small" data-act="dismiss">Dismiss</button></div>';
+    } else { el.innerHTML = ''; }
+  }
+
+  function renderPhone() {
+    var st = miteStatus(), html = '<div class="statusbar"><span>9:41</span><span>Rook</span></div>' +
+      '<div class="app-title"><h2>Hi, Meteor Mite</h2><span class="small muted">Available</span></div>';
+    if (state.callout) {
+      html += '<div class="ph-card offer"><span class="eyebrow">New callout</span><p class="big">Incident · 11 min away</p>' +
+        '<p class="count" aria-live="off">' + state.callout.left + 's</p><p class="small">Kip has been alerted too.</p>' +
+        '<button type="button" class="ph-btn go" data-act="accept">Accept</button><button type="button" class="ph-btn no" data-act="decline">Decline</button>' +
+        '<button type="button" class="linkish small" data-act="timeout">(Prototype: let it time out)</button></div>';
+    } else if (st === 'quiet') {
+      html += '<div class="ph-card"><p class="big">You\'re still active.</p><p>It\'s been quiet because you missed 12 of your 17 offers from mid-August, which lowered your score. Your score now heals a little each day, back toward the middle.</p>' +
+        scoreBar('Your score') +
+        '<p class="small muted">A higher score doesn\'t promise more offers. You\'ll be asked when you\'re a good match.</p></div>';
+      html += readyBlock();
+    } else if (st === 'back') {
+      html += '<div class="ph-card"><p class="big">Your score is back near the middle.</p><p>In this scenario, offers are starting to come in again when you\'re a good match (illustrative).</p></div>' + readyBlock();
+    } else {
+      html += '<div class="ph-card"><p class="big">Your score is back near the middle.</p><p>You\'re still getting few offers, most likely because other responders are closer to recent incidents. Kip can talk it through with you.</p></div>' + readyBlock();
+    }
+    if (state.phoneMsg && !state.callout) html += '<div class="ph-card"><p class="small">' + state.phoneMsg + '</p></div>';
+    $('phone').innerHTML = html;
+  }
+
+  function readyBlock() {
+    return state.ready
+      ? '<div class="ph-card"><p><b>Kip knows you\'re by your phone.</b></p><p class="small muted">This doesn\'t move you up the list. You\'ll be asked when you\'re a good match.</p><button type="button" class="ph-btn alt" data-act="ready">I\'m stepping away</button></div>'
+      : '<button type="button" class="ph-btn go" data-act="ready">Ready now</button><p class="small muted" style="text-align:center;">Lets Kip know you\'re by your phone</p>';
+  }
+
+  function render() {
+    document.querySelectorAll('[data-day]').forEach(function (b) { b.setAttribute('aria-pressed', String(Number(b.dataset.day) === state.day)); });
+    document.querySelectorAll('[data-scen]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.scen === state.scen)); });
+    $('sendCallout').disabled = !!state.callout;
+    renderMite(); renderGale(); renderAlert(); renderPhone();
+  }
+
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast._t); toast._t = setTimeout(function () { t.hidden = true; }, 3200);
+  }
+
+  function chime() {
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
+      var ctx = new Ctx(); [660, 880].forEach(function (f, i) {
+        var o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = f; o.connect(g); g.connect(ctx.destination);
+        var t0 = ctx.currentTime + i * 0.18; g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.15, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.16);
+        o.start(t0); o.stop(t0 + 0.17);
+      });
+    } catch (e) { /* sound is optional */ }
+  }
+
+  function startCallout() {
+    if (state.callout) return;
+    state.callout = { left: 60 }; state.phoneMsg = null; state.lastAlert = null; chime(); render();
+    timer = setInterval(function () {
+      state.callout.left -= 1;
+      if (state.callout.left <= 0) { resolve('timeout'); return; }
+      renderAlert();
+      var c = document.querySelector('.screen .count'); if (c) c.textContent = state.callout.left + 's';
+    }, 1000);
+  }
+
+  function resolve(kind) {
+    clearInterval(timer); timer = null; state.callout = null;
+    if (kind === 'accept') {
+      state.events.push({ day: state.day, delta: ACCEPT }); state.accepted += 1;
+      state.last = 'Accepted (score +0.08).';
+      state.lastAlert = 'Mite accepted the callout.';
+      state.phoneMsg = 'You\'re on it. Accepting raises your score by 0.08.';
+      toast('Mite accepted: score +0.08.');
+    } else if (kind === 'decline') {
+      state.events.push({ day: state.day, delta: -DECLINE });
+      state.last = 'Declined (score −0.12, the same as today). The job was passed on right away.';
+      state.lastAlert = 'Mite declined. It went to the next responder right away.';
+      state.phoneMsg = 'Declined. A deliberate "no" costs 0.12, the same as today.';
+      toast('Declined: −0.12, the same as today.');
+    } else {
+      state.events.push({ day: state.day, delta: -TIMEOUT });
+      state.last = 'Timed out after 60 seconds (score −0.06 under the proposal; −0.12 today).';
+      state.lastAlert = 'No answer from Mite in 60 seconds. It then went to the next responder.';
+      state.phoneMsg = 'Missed it. Under the proposal a timeout costs 0.06 instead of 0.12 (placeholder value).';
+      toast('Timed out: −0.06 instead of −0.12 (proposed).');
+    }
+    render();
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.day !== undefined) { state.day = Number(b.dataset.day); render(); return; }
+    if (b.dataset.scen) { state.scen = b.dataset.scen; render(); return; }
+    if (b.id === 'sendCallout') { startCallout(); return; }
+    if (b.id === 'resetAll') { clearInterval(timer); timer = null; state = fresh(); render(); toast('Reset to day 0.'); return; }
+    if (b.dataset.toggle === 'miteDetails') { state.open = !state.open; renderMite(); return; }
+    var act = b.dataset.act;
+    if (act === 'ready') { state.ready = !state.ready; toast(state.ready ? 'Kip sees: Mite is by the phone.' : 'Kip sees: Mite stepped away.'); render(); }
+    else if (act === 'accept' || act === 'decline' || act === 'timeout') { resolve(act); }
+    else if (act === 'dismiss') { state.lastAlert = null; renderAlert(); }
+  });
+
+  render();
+})();
+</script>
+<script>
+(function () {
+  var hist = [11, 12, 10, 11, 12, 11, 10, 4, 2, 1];
+  var histLabels = ['29 Jun','6 Jul','13 Jul','20 Jul','27 Jul','3 Aug','10 Aug','17 Aug','24 Aug','31 Aug'];
+  var simLabels = ['7 Sep','14 Sep','21 Sep','28 Sep','5 Oct','12 Oct','19 Oct','26 Oct'];
+  var BEH = {
+    normal:   { a: 0.70, t: 0.20, d: 0.10, text: 'answers like he did before 4.2 (accepts about 7 in 10)' },
+    timeouts: { a: 0.40, t: 0.50, d: 0.10, text: 'keeps timing out (half his offers expire)' },
+    mostly:   { a: 0.20, t: 0.70, d: 0.10, text: 'mostly misses (7 in 10 expire, e.g. phone problems)' }
+  };
+  var HEAL = { slow: 10, medium: 5, fast: 3 };
+  var cfg = { beh: 'normal', heal: 'medium' };
+  var NORMAL = 10;
+
+  function offersFor(s) { return 1 + 10 * Math.min(1, s / 0.5); }
+
+  function simulate(rules) {
+    var b = BEH[cfg.beh], s = 0, weeks = [], back = null;
+    var timeoutCost = rules === 'proposed' ? 0.06 : 0.12;
+    var keep = Math.pow(0.5, 7 / HEAL[cfg.heal]);
+    for (var w = 0; w < simLabels.length; w++) {
+      if (rules === 'proposed' && s < 0.5) s = 0.5 - (0.5 - s) * keep;
+      var n = offersFor(s);
+      weeks.push({ n: n, acc: n * b.a, miss: n * (b.t + b.d) });
+      if (back === null && n >= NORMAL) back = w;
+      s = Math.max(0, Math.min(1, s + n * (b.a * 0.08 - b.t * timeoutCost - b.d * 0.12)));
+    }
+    return { weeks: weeks, back: back };
+  }
+
+  function f1(v) { return (Math.round(v * 10) / 10).toFixed(1); }
+
+  function drawChart(cur, prop) {
+    var W = 760, H = 290, L = 40, R = 14, T = 30, B = 46, slots = hist.length + simLabels.length;
+    var sw = (W - L - R) / slots, ymax = 14;
+    function x(i) { return L + i * sw + sw / 2; }
+    function y(v) { return T + (1 - v / ymax) * (H - T - B); }
+    var s = '';
+    var simX = L + hist.length * sw;
+    s += '<rect x="' + simX + '" y="' + T + '" width="' + (W - R - simX) + '" height="' + (H - T - B) + '" fill="var(--surface-2)" stroke="var(--line)" stroke-dasharray="4 3"></rect>';
+    s += '<text x="' + (simX + 6) + '" y="' + (T - 8) + '">Simulation (illustrative) →</text>';
+    s += '<text x="' + (L) + '" y="' + (T - 8) + '">Real data</text>';
+    [0, 5, 10].forEach(function (v) {
+      s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="var(--line)"></line>';
+      s += '<text x="' + (L - 6) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + v + '</text>';
+    });
+    s += '<text x="12" y="' + (T + (H - T - B) / 2) + '" transform="rotate(-90 12 ' + (T + (H - T - B) / 2) + ')" text-anchor="middle">Offers per week</text>';
+    hist.forEach(function (v, i) {
+      var bw = sw * 0.62, bx = x(i) - bw / 2;
+      s += '<rect x="' + bx.toFixed(1) + '" y="' + y(v).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + (y(0) - y(v)).toFixed(1) + '" rx="2" fill="var(--bar)"><title>' + histLabels[i] + ': ' + v + ' offers (real)</title></rect>';
+    });
+    var rx = x(6);
+    s += '<line x1="' + rx + '" x2="' + rx + '" y1="' + T + '" y2="' + y(0) + '" stroke="var(--warn)" stroke-dasharray="3 3"></line>';
+    s += '<text x="' + (rx + 4) + '" y="' + (T + 12) + '">4.2 ships</text>';
+    function line(series, color, dash, label) {
+      var pts = [[x(hist.length - 1), y(hist[hist.length - 1])]];
+      series.weeks.forEach(function (wk, i) { pts.push([x(hist.length + i), y(wk.n)]); });
+      var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
+      var out = '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="3"' + (dash ? ' stroke-dasharray="7 5"' : '') + '></path>';
+      series.weeks.forEach(function (wk, i) {
+        out += '<circle cx="' + x(hist.length + i).toFixed(1) + '" cy="' + y(wk.n).toFixed(1) + '" r="4" fill="' + color + '"><title>' + simLabels[i] + ', ' + label + ': about ' + f1(wk.n) + ' offers (simulated)</title></circle>';
+      });
+      return out;
+    }
+    s += line(cur, 'var(--warn)', true, "today's rules");
+    s += line(prop, 'var(--good)', false, 'Back in Rotation');
+    var labels = histLabels.concat(simLabels);
+    labels.forEach(function (lab, i) {
+      if (i % 2 === 1 && i !== hist.length - 1) return;
+      s += '<text x="' + x(i).toFixed(1) + '" y="' + (H - B + 16) + '" text-anchor="middle">' + lab + '</text>';
+    });
+    s += '<text x="' + (W - R) + '" y="' + (H - 6) + '" text-anchor="end">Week starting</text>';
+    var svg = document.getElementById('cmpChart');
+    svg.innerHTML = s;
+    var lc = cur.weeks[cur.weeks.length - 1].n, lp = prop.weeks[prop.weeks.length - 1].n;
+    svg.setAttribute('aria-label', 'Meteor Mite offers per week. Real: ' + hist.join(', ') + ' (29 Jun to 31 Aug). Simulated by 26 Oct: today\'s rules about ' + f1(lc) + ', Back in Rotation about ' + f1(lp) + '.');
+  }
+
+  function cardHtml(sim) {
+    var last = sim.weeks[sim.weeks.length - 1];
+    return '<dt>Offers a week by 26 Oct</dt><dd>' + f1(last.n) + '</dd>' +
+      '<dt>Jobs taken a week</dt><dd>' + f1(last.acc) + '</dd>' +
+      '<dt>Missed offers a week</dt><dd>' + f1(last.miss) + '</dd>' +
+      '<dt>Reaches 10+ offers a week (if the assumption holds)</dt><dd>' + (sim.back === null ? 'Not within 8 weeks' : 'Week of ' + simLabels[sim.back]) + '</dd>';
+  }
+
+  function verdict(cur, prop) {
+    var lc = cur.weeks[cur.weeks.length - 1], lp = prop.weeks[prop.weeks.length - 1];
+    var who = 'If Mite ' + BEH[cfg.beh].text + ': ';
+    var tail = ' This depends on the score-to-offers assumption above.';
+    if (cur.back === null && prop.back !== null) return who + 'under today\'s rules he stays stuck at about ' + f1(lc.n) + ' offer' + (lc.n >= 1.5 ? 's' : '') + ' a week. With Back in Rotation he could reach about his old number of offers by the week of ' + simLabels[prop.back] + '.' + tail;
+    if (cur.back !== null && prop.back !== null) return who + 'his offers climb back under both, because he accepts most of them. Today\'s rules take until ' + simLabels[cur.back] + ', and Back in Rotation gets there by ' + simLabels[prop.back] + '.' + tail;
+    if (cur.back === null && prop.back === null && lp.n >= 8) return who + 'today\'s rules leave him stuck at about ' + f1(lc.n) + ' a week. Back in Rotation lifts him to about ' + f1(lp.n) + ' a week, even though he keeps missing. Each week his misses pull him down a little and healing pulls him back up.' + tail;
+    if (cur.back === null && prop.back === null && lp.n - lc.n >= 3) return who + 'today\'s rules leave him stuck at about ' + f1(lc.n) + ' a week. Back in Rotation lifts him to about ' + f1(lp.n) + ' a week, but his misses keep pulling him back down. The card would switch to "still quiet," and Kip should find out why he keeps missing.' + tail;
+    return who + 'neither set of rules gets him to 10+ offers a week within 8 weeks (today\'s rules about ' + f1(lc.n) + ', Back in Rotation about ' + f1(lp.n) + ' a week).' + tail;
+  }
+
+  function render() {
+    document.querySelectorAll('[data-beh]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.beh === cfg.beh)); });
+    document.querySelectorAll('[data-heal]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.heal === cfg.heal)); });
+    var cur = simulate('current'), prop = simulate('proposed');
+    drawChart(cur, prop);
+    document.getElementById('cmpCur').innerHTML = cardHtml(cur);
+    document.getElementById('cmpProp').innerHTML = cardHtml(prop);
+    document.getElementById('cmpVerdict').textContent = verdict(cur, prop);
+    var lastN = prop.weeks[prop.weeks.length - 1].n, b = BEH[cfg.beh];
+    document.getElementById('cmpCost').textContent = 'Cost to watch: under Back in Rotation, Mite would have about ' + f1(lastN * b.t) + ' timeouts a week. Each one holds the job for up to 60 seconds before the next responder is asked, which is why the response-time guardrails matter. His ' + f1(lastN * b.d) + ' deliberate "no"s a week pass the job on right away.';
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.beh) { cfg.beh = b.dataset.beh; render(); }
+    else if (b.dataset.heal) { cfg.heal = b.dataset.heal; render(); }
+  });
+
+  render();
+})();
+</script>
+<script>
+(function () {
+  // Real weekly data from 00-rook/data/callout-history.csv (29 Jun - 31 Aug)
+  var RESP = [
+    { name: 'Farlight',          sent: [12,12,11,12,13,12,10,3,1,0], taken: [9,9,8,9,10,8,4,0,0,0] },
+    { name: 'Meteor Mite',       sent: [11,12,10,11,12,11,10,4,2,1], taken: [7,9,6,7,9,8,4,1,0,0] },
+    { name: 'The Undertow',      sent: [12,11,12,13,12,12,11,4,1,1], taken: [9,9,9,10,10,9,4,1,0,0] },
+    { name: 'Vesper',            sent: [14,13,15,14,13,14,12,5,2,1], taken: [11,10,13,11,11,12,6,1,0,0] },
+    { name: 'Corporal Ashgrove', sent: [10,11,10,9,10,10,10,8,7,7],  taken: [8,9,7,7,8,8,6,5,5,5] },
+    { name: 'Halfmoon',          sent: [11,10,11,12,11,11,11,9,8,8], taken: [8,7,8,8,9,8,6,5,5,7] }
+  ];
+  var WEEKS = ['29 Jun','6 Jul','13 Jul','20 Jul','27 Jul','3 Aug','10 Aug','17 Aug','24 Aug','31 Aug'];
+  var RULES = [
+    { key: 'cur',   name: "Today's 4.2 rules",     heal: false, light: false, color: 'var(--warn)',   dash: '7 5' },
+    { key: 'heal',  name: 'Healing only',          heal: true,  light: false, color: 'var(--accent)', dash: '2 4' },
+    { key: 'light', name: 'Lighter timeouts only', heal: false, light: true,  color: 'var(--quiet)',  dash: '10 3 2 3' },
+    { key: 'both',  name: 'Both changes',          heal: true,  light: true,  color: 'var(--good)',   dash: '' }
+  ];
+  var ACCEPT = 0.08, DECLINE = 0.12, START = 0.5, MID = 0.5;
+  var P = { share: 50, ratio: 50, half: 5, sel: 1 };
+
+  function $(id) { return document.getElementById(id); }
+  function clamp(v) { return Math.max(0, Math.min(1, v)); }
+  function f2(v) { return v.toFixed(2); }
+  function timeoutCost(rule) { return rule.light ? DECLINE * P.ratio / 100 : DECLINE; }
+  function missCost(rule) { var t = P.share / 100; return t * timeoutCost(rule) + (1 - t) * DECLINE; }
+  function healDay(s, rule) { return (rule.heal && s < MID) ? MID - (MID - s) * Math.pow(0.5, 1 / P.half) : s; }
+
+  // Spread n offers (a of them accepted) evenly over 7 days.
+  function weekPlan(n, a) {
+    var days = [[], [], [], [], [], [], []];
+    for (var k = 0; k < n; k++) {
+      var yes = Math.floor((k + 1) * a / n) > Math.floor(k * a / n);
+      days[Math.floor(k * 7 / n)].push(yes);
+    }
+    return days;
+  }
+
+  function replay(resp, rule) {
+    var s = START, ends = [], mc = missCost(rule);
+    for (var w = 0; w < resp.sent.length; w++) {
+      var days = weekPlan(resp.sent[w], resp.taken[w]);
+      for (var d = 0; d < 7; d++) {
+        s = healDay(s, rule);
+        for (var j = 0; j < days[d].length; j++) s = clamp(s + (days[d][j] ? ACCEPT : -mc));
+      }
+      ends.push(s);
+    }
+    return ends;
+  }
+
+  // Made-up responder: 10 offers a week for 10 weeks, says yes to `yes` of them.
+  // Ranking uses the score at the moment an offer is made, so we record it then (after healing, before the answer).
+  function steady(rule, yes) {
+    var s = START, sum = 0, count = 0, peak = 0;
+    var cost = yes === 0 ? DECLINE : missCost(rule);
+    for (var w = 0; w < 10; w++) {
+      var days = weekPlan(10, yes);
+      for (var d = 0; d < 7; d++) {
+        s = healDay(s, rule);
+        for (var j = 0; j < days[d].length; j++) {
+          if (w > 0) { sum += s; count++; peak = Math.max(peak, s); }
+          s = clamp(s + (days[d][j] ? ACCEPT : -cost));
+        }
+      }
+    }
+    return { end: s, avg: sum / count, peak: peak };
+  }
+
+  function cell(v, best) {
+    return '<td' + (best ? ' class="best"' : '') + '><span class="score"><span class="meter"><i style="width:' + Math.round(v * 100) + '%"></i></span>' + f2(v) + (best ? ' <span class="pill good">highest</span>' : '') + '</span></td>';
+  }
+
+  function avg(arr) { return arr.reduce(function (a, b) { return a + b; }, 0) / arr.length; }
+
+  function renderSliders() {
+    $('slShareVal').textContent = (P.share / 10) + ' out of 10 misses ran out of time';
+    $('slShareNote').textContent = P.share === 0 ? 'Every miss counts as a real "no," so the "lighter timeouts" change can\'t help anyone.' :
+      P.share === 100 ? 'Every miss counts as "time ran out," so the "lighter timeouts" change helps as much as it can.' :
+      'Moving right makes the "lighter timeouts" change matter more. It has no effect on today\'s rules, where both cost the same.';
+    $('slRatioVal').textContent = P.ratio === 100 ? 'The same as saying "no" (today\'s rule)' : P.ratio === 0 ? 'Not at all' : P.ratio + '% as much as saying "no"';
+    $('slRatioNote').textContent = 'A timeout now costs ' + f2(DECLINE * P.ratio / 100) + ' points, compared with ' + f2(DECLINE) + ' for a "no." This only changes the "Lighter timeouts" and "Both" columns.';
+    $('slHalfVal').textContent = 'Heals halfway back in ' + P.half + ' day' + (P.half === 1 ? '' : 's');
+    $('slHalfNote').textContent = 'Example: a score of 0 would reach about ' + f2(MID - MID * Math.pow(0.5, 7 / P.half)) + ' after one quiet week. This only changes the "Healing" and "Both" columns.';
+  }
+
+  function renderTable() {
+    var rows = '', gains = { heal: [], light: [], both: [] };
+    RESP.forEach(function (r, i) {
+      var res = RULES.map(function (rule) { return replay(r, rule); });
+      var ends = res.map(function (e) { return e[9]; });
+      var best = Math.max.apply(null, ends);
+      var before = avg(r.sent.slice(0, 6)), after = avg(r.sent.slice(7));
+      gains.heal.push(ends[1] - ends[0]); gains.light.push(ends[2] - ends[0]); gains.both.push(ends[3] - ends[0]);
+      rows += '<tr' + (i === P.sel ? ' class="sel"' : '') + '><td><button type="button" class="rowbtn" data-resp="' + i + '" aria-pressed="' + (i === P.sel) + '">' + r.name + '</button></td>' +
+        '<td>' + before.toFixed(1) + ' → ' + after.toFixed(1) + '</td><td>' + f2(res[0][5]) + '</td>' +
+        ends.map(function (v) { return cell(v, v === best && best - Math.min.apply(null, ends) > 0.005); }).join('') + '</tr>';
+    });
+    $('rlBody').innerHTML = rows;
+    var four = function (a) { return avg(a.slice(0, 4)); };
+    var gh = four(gains.heal), gl = four(gains.light), gb = four(gains.both);
+    var lead = Math.abs(gh - gl) < 0.03 ? 'Healing and lighter timeouts help about equally' : (gh > gl ? 'Healing makes the bigger difference' : 'Lighter timeouts make the bigger difference');
+    var why;
+    if (P.share === 0 || P.ratio === 100) why = 'With these settings, every miss still costs the full amount, so "lighter timeouts" can\'t help at all.';
+    else if (gl > gh) why = 'That depends on the guess in slider 1. If fewer misses were timeouts, healing would matter more.';
+    else why = 'Healing keeps working after the offers stop. Lighter timeouts only help in the weeks when misses actually happened.';
+    var rest = RESP.slice(4).map(function (r) { return replay(r, RULES[0])[9]; });
+    $('rlSummary').textContent = 'For the four who collapsed, the score on 31 Aug goes up by an average of ' + f2(gh) + ' with healing only, ' + f2(gl) + ' with lighter timeouts only, and ' + f2(gb) + ' with both, compared with today\'s rules. ' + lead + ' with these settings. ' + why +
+      (rest.every(function (v) { return v > 0.9; }) ? ' Corporal Ashgrove and Halfmoon keep a top score under every rule, because they still said yes to about 6 or 7 in 10 offers. So their drop in offers isn\'t coming from the score. It is more likely the 4.2 weight change (distance), but that isn\'t confirmed.' : '');
+  }
+
+  function renderChart() {
+    var r = RESP[P.sel], W = 760, H = 300, L = 44, Rr = 44, T = 30, B = 44, n = WEEKS.length;
+    var sw = (W - L - Rr) / n;
+    function x(i) { return L + i * sw + sw / 2; }
+    function y(v) { return T + (1 - v) * (H - T - B); }
+    function yo(v) { return T + (1 - v / 15) * (H - T - B); }
+    var s = '<text x="' + L + '" y="' + (T - 10) + '">' + r.name + ': score at the end of each week (real offers shown as faint bars)</text>';
+    [0, 0.5, 1].forEach(function (v) {
+      s += '<line x1="' + L + '" x2="' + (W - Rr) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="var(--line)"></line>';
+      s += '<text x="' + (L - 6) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + v.toFixed(1) + '</text>';
+    });
+    s += '<text x="' + (W - Rr + 6) + '" y="' + (yo(15) + 4) + '">15</text><text x="' + (W - Rr + 6) + '" y="' + (yo(0) + 4) + '">0</text>';
+    s += '<text x="' + (W - 4) + '" y="' + (T + (H - T - B) / 2) + '" text-anchor="end" transform="rotate(-90 ' + (W - 10) + ' ' + (T + (H - T - B) / 2) + ')">offers (real)</text>';
+    r.sent.forEach(function (v, i) {
+      var bw = sw * 0.55;
+      s += '<rect x="' + (x(i) - bw / 2).toFixed(1) + '" y="' + yo(v).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + (yo(0) - yo(v)).toFixed(1) + '" fill="var(--bar)" opacity="0.35"><title>' + WEEKS[i] + ': ' + v + ' offers, ' + r.taken[i] + ' accepted (real)</title></rect>';
+    });
+    s += '<line x1="' + x(6) + '" x2="' + x(6) + '" y1="' + T + '" y2="' + y(0) + '" stroke="var(--warn)" stroke-dasharray="3 3"></line><text x="' + (x(6) + 4) + '" y="' + (T + 12) + '">4.2 ships</text>';
+    var label = [];
+    RULES.forEach(function (rule) {
+      var e = replay(r, rule);
+      var d = e.map(function (v, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); }).join(' ');
+      s += '<path d="' + d + '" fill="none" stroke="' + rule.color + '" stroke-width="3"' + (rule.dash ? ' stroke-dasharray="' + rule.dash + '"' : '') + '></path>';
+      e.forEach(function (v, i) { s += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(v).toFixed(1) + '" r="3" fill="' + rule.color + '"><title>' + WEEKS[i] + ', ' + rule.name + ': ' + f2(v) + '</title></circle>'; });
+      label.push(rule.name + ' ' + f2(e[9]));
+    });
+    WEEKS.forEach(function (w, i) { if (i % 2 === 0 || i === n - 1) s += '<text x="' + x(i).toFixed(1) + '" y="' + (H - B + 16) + '" text-anchor="middle">' + w + '</text>'; });
+    s += '<text x="' + L + '" y="' + (H - 6) + '">Score (0 = bottom of the list, 1 = top). Calculated from real offers; the rules are the only thing that changes.</text>';
+    $('rlChart').innerHTML = s;
+    $('rlChart').setAttribute('aria-label', r.name + ' score by 31 Aug under each rule: ' + label.join('; '));
+    $('rlLegend').innerHTML = RULES.map(function (rule) {
+      return '<span><svg width="26" height="8" aria-hidden="true"><line x1="0" x2="26" y1="4" y2="4" stroke="' + rule.color + '" stroke-width="3"' + (rule.dash ? ' stroke-dasharray="' + rule.dash + '"' : '') + '></line></svg>' + rule.name + '</span>';
+    }).join('');
+  }
+
+  function renderDecliner() {
+    var out = RULES.map(function (rule) { return { rule: rule, dec: steady(rule, 0), rel: steady(rule, 7) }; });
+    $('decGrid').innerHTML = out.map(function (o) {
+      return '<div class="dec-card"><b>' + o.rule.name + '</b><dl class="kv">' +
+        '<dt>Decliner\'s score after 10 weeks</dt><dd>' + f2(o.dec.end) + '</dd>' +
+        '<dt>Decliner\'s score when offered work (average)</dt><dd>' + f2(o.dec.avg) + '</dd>' +
+        '<dt>Decliner\'s highest score when offered</dt><dd>' + f2(o.dec.peak) + '</dd>' +
+        '<dt>Reliable responder\'s score</dt><dd>' + f2(o.rel.end) + '</dd></dl></div>';
+    }).join('');
+    var both = out[3], cur = out[0];
+    var gap = both.rel.end - both.dec.avg;
+    var verdict;
+    if (both.dec.avg < 0.1) verdict = 'No meaningful reward. Under both changes, the decliner averages ' + f2(both.dec.avg) + ', about the same as today\'s rules (' + f2(cur.dec.avg) + '), while a reliable responder sits at ' + f2(both.rel.end) + '. Every "no" still costs the full amount, and healing can\'t keep up with 10 refusals a week.';
+    else if (both.dec.avg < 0.25) verdict = 'A small reward. Between refusals, healing lifts the decliner to about ' + f2(both.dec.peak) + ' by the time the next offer arrives, averaging ' + f2(both.dec.avg) + ' compared with ' + f2(cur.dec.avg) + ' under today\'s rules. That\'s still far below a reliable responder (' + f2(both.rel.end) + '). It could earn them a few extra offers, which they would turn down.';
+    else verdict = 'Yes, a noticeable reward with this healing speed. The decliner averages ' + f2(both.dec.avg) + ' (today\'s rules: ' + f2(cur.dec.avg) + '), only ' + f2(gap) + ' below a reliable responder. Fast healing is undoing deliberate refusals. Slow the healing down, or pause it after a deliberate "no."';
+    $('decVerdict').textContent = verdict;
+  }
+
+  function renderAll() { renderSliders(); renderTable(); renderChart(); renderDecliner(); }
+
+  $('slShare').addEventListener('input', function (e) { P.share = Number(e.target.value); renderAll(); });
+  $('slRatio').addEventListener('input', function (e) { P.ratio = Number(e.target.value); renderAll(); });
+  $('slHalf').addEventListener('input', function (e) { P.half = Number(e.target.value); renderAll(); });
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-resp]'); if (!b) return;
+    P.sel = Number(b.dataset.resp); renderTable(); renderChart();
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
