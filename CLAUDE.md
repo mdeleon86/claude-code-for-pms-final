@@ -117,6 +117,30 @@ from the "was…" notes in `config.py`: weights 0.60 proximity / 0.25 acceptance
   assumes 0.5 wins his old volume; Sim B is the Rule lab sliders. Last
   readiness review: about 87/100.
 
+**Module 6: review-checklist skill** (`.claude/skills/review-checklist/SKILL.md`)
+- **What it does:** a read-only review of a brief against six checks: owner,
+  measurable success, consistent scope, problem before solution, evidence and
+  assumptions, and risks and mitigation. Each check is rated Pass, Needs
+  Improvement or Missing, with where, problem and fix. Given a folder, it
+  reviews each brief and adds a summary table.
+- **Test 1** (`06-sidekicks/briefs/`, 4 briefs):
+  - Every brief had Risks Missing, and none had a measurable success target.
+  - Top issues: Bulk Callout has no risks (extra declines hurt scores). Phone
+    App misquotes Aunt Dot. Requisition Chains' scope creeps, and its 48h
+    bypass undoes the second sign-off. Override Log has no success measure.
+  - Halloran's interview complains approvals are *slow*, not that they need a
+    second approver.
+  - CHANGELOG says the override log shipped in 4.0 and bulk callout in 4.1.
+- **Test 2:** checked that the skill was actually loaded. SKILL.md matched
+  what was followed. One slip: a few facts (`history.py:39`, Policy 4.1)
+  came from this file, not files opened in that session.
+- **Schedule:** "Monday brief review" (task `weekly-brief-review`) runs Mondays
+  at 9:00 local. First run is 12 Oct. Reports go to
+  `06-sidekicks/review-runs/<date>.md`. The task file outside this folder holds
+  no Rook details.
+- **Ignore `06-sidekicks/scheduled-run-output.txt`.** It's dated 13 Oct (in
+  the future), uses 4 checks, and isn't from this schedule.
+
 **Slack:** the connector works. The class channel is
 #claude-code-for-pms-sep21-26-weeknights. Always confirm the exact text
 before posting there; for tests, use my own DMs.
