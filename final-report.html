@@ -1,0 +1,1140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Release 4.2 Review</title>
+<meta name="description" content="Final Claude Code for PMs presentation: what happened in Rook Dispatch Release 4.2, why, and what to do next. Fictional course scenario.">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f6f5f1;
+  --surface: #fcfcfb;
+  --surface-2: #efeee9;
+  --line: #dcdad3;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --ink-3: #7a7973;
+  --accent: #2a78d6;
+  --s-four: #eb6834;   /* series: the four collapsed responders */
+  --s-other: #2a78d6;  /* series: the other twelve */
+  --s-prop: #1baf7a;   /* series: proposed rules */
+  --s-mid: #4a3aa7;    /* series: a fourth identity (healing only) */
+  --conf-bg: #e3f1e6; --conf-ink: #145c1f;
+  --assm-bg: #fbf0d5; --assm-ink: #7a5300;
+  --rec-bg:  #e2ecfb; --rec-ink: #184f95;
+  --warn-bg: #fbe4e1; --warn-ink: #8f2320;
+  --shadow: 0 1px 2px rgba(0,0,0,.05), 0 6px 24px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #121211; --surface: #1a1a19; --surface-2: #232321; --line: #383835;
+    --ink: #ffffff; --ink-2: #c3c2b7; --ink-3: #96958c;
+    --accent: #3987e5; --s-four: #d95926; --s-other: #3987e5; --s-prop: #199e70; --s-mid: #9085e9;
+    --conf-bg: #17321c; --conf-ink: #9fdcaa;
+    --assm-bg: #3a2e10; --assm-ink: #f3cf7a;
+    --rec-bg: #14294a; --rec-ink: #a9c9f5;
+    --warn-bg: #3d1a18; --warn-ink: #f2a8a3;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 24px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121211; --surface: #1a1a19; --surface-2: #232321; --line: #383835;
+  --ink: #ffffff; --ink-2: #c3c2b7; --ink-3: #96958c;
+  --accent: #3987e5; --s-four: #d95926; --s-other: #3987e5; --s-prop: #199e70; --s-mid: #9085e9;
+  --conf-bg: #17321c; --conf-ink: #9fdcaa;
+  --assm-bg: #3a2e10; --assm-ink: #f3cf7a;
+  --rec-bg: #14294a; --rec-ink: #a9c9f5;
+  --warn-bg: #3d1a18; --warn-ink: #f2a8a3;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 24px rgba(0,0,0,.3);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); }
+code { font: .86em/1.4 ui-monospace, "Cascadia Mono", Consolas, monospace; background: var(--surface-2); padding: .08em .35em; border-radius: 4px; }
+h1, h2, h3 { line-height: 1.15; margin: 0 0 .5em; letter-spacing: -.01em; }
+h2 { font-size: clamp(28px, 4vw, 42px); }
+h3 { font-size: 19px; }
+p { margin: 0 0 .8em; }
+.muted { color: var(--ink-2); }
+.small { font-size: 14px; }
+.tiny { font-size: 12.5px; color: var(--ink-3); }
+
+/* top bar */
+.bar {
+  position: fixed; inset: 0 0 auto 0; z-index: 20; height: 56px;
+  display: flex; align-items: center; gap: 10px; padding: 0 16px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px); border-bottom: 1px solid var(--line);
+}
+.bar .brand { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+.bar .brand span { color: var(--ink-3); font-weight: 500; }
+.bar button, .btn {
+  font: inherit; font-size: 14px; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; padding: 7px 11px; cursor: pointer; min-height: 36px;
+}
+.bar button:hover, .btn:hover { border-color: var(--ink-3); }
+.bar button:focus-visible, .btn:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.counter { font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; min-width: 52px; text-align: center; }
+.progress { position: fixed; top: 56px; left: 0; height: 3px; background: var(--accent); width: 0; z-index: 21; transition: width .2s; }
+.menu {
+  position: fixed; top: 64px; right: 16px; z-index: 30; width: min(340px, calc(100vw - 32px));
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
+  padding: 8px; display: none; max-height: calc(100vh - 90px); overflow: auto;
+}
+.menu.open { display: block; }
+.menu a { display: flex; gap: 10px; padding: 8px 10px; border-radius: 8px; text-decoration: none; color: var(--ink); font-size: 15px; }
+.menu a:hover, .menu a.cur { background: var(--surface-2); }
+.menu a b { color: var(--ink-3); font-weight: 600; min-width: 22px; font-variant-numeric: tabular-nums; }
+
+/* slides */
+main { padding-top: 56px; }
+.slide { min-height: calc(100vh - 56px); padding: 56px 16px 64px; border-bottom: 1px solid var(--line); display: flex; }
+.slide > .wrap { max-width: 1120px; width: 100%; margin: 0 auto; }
+.kicker { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+.lede { font-size: clamp(18px, 2.1vw, 22px); color: var(--ink-2); max-width: 820px; margin-bottom: 28px; }
+.grid { display: grid; gap: 16px; }
+.g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 860px) { .g3, .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px) { .g2, .g3, .g4 { grid-template-columns: minmax(0, 1fr); } .slide { padding-top: 36px; } body { font-size: 16px; } .meter { display: none; } .card { padding: 16px; } .bar .brand span { display: none; } }
+code { overflow-wrap: anywhere; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); min-width: 0; }
+.card h3 { margin-bottom: .4em; }
+.card ul { margin: 0; padding-left: 1.1em; }
+.card li { margin: .3em 0; }
+.stat { font-size: clamp(34px, 5vw, 52px); font-weight: 800; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.stat small { font-size: .42em; font-weight: 600; color: var(--ink-2); letter-spacing: 0; }
+.stat-label { margin-top: 8px; font-size: 15px; color: var(--ink-2); }
+.src { display: block; margin-top: 10px; font-size: 12.5px; color: var(--ink-3); }
+.src code { font-size: 11.5px; }
+
+/* evidence tags */
+.tag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; vertical-align: 2px; white-space: nowrap; }
+.tag::before { font-size: 11px; }
+.t-conf { background: var(--conf-bg); color: var(--conf-ink); } .t-conf::before { content: "✓"; }
+.t-assm { background: var(--assm-bg); color: var(--assm-ink); } .t-assm::before { content: "?"; }
+.t-rec  { background: var(--rec-bg);  color: var(--rec-ink); }  .t-rec::before  { content: "→"; }
+.t-open { background: var(--warn-bg); color: var(--warn-ink); } .t-open::before { content: "!"; }
+.legend-tags { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 14px; color: var(--ink-2); margin: 0 0 22px; }
+
+/* hero */
+.hero { display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; align-items: center; }
+@media (max-width: 860px) { .hero { grid-template-columns: 1fr; } }
+.hero h1 { font-size: clamp(36px, 6vw, 68px); letter-spacing: -.025em; }
+.rec-box { background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--accent); border-radius: 14px; padding: 22px 24px; box-shadow: var(--shadow); }
+.rec-box ol { margin: 0; padding-left: 1.2em; }
+.rec-box li { margin: .55em 0; }
+.pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.pill { font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); }
+
+/* charts */
+.chart { width: 100%; height: auto; display: block; overflow: visible; }
+.chart text { fill: var(--ink-2); font-size: 12px; font-family: inherit; }
+.chart .axis { stroke: var(--line); }
+.chart .grid-l { stroke: var(--line); stroke-dasharray: 2 4; }
+.chart .lbl-strong { fill: var(--ink); font-weight: 700; }
+.key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13.5px; color: var(--ink-2); margin: 6px 0 4px; }
+.key i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.tip {
+  position: fixed; z-index: 40; pointer-events: none; background: var(--ink); color: var(--bg);
+  font-size: 13px; line-height: 1.4; padding: 7px 10px; border-radius: 8px; max-width: 260px; opacity: 0; transition: opacity .1s;
+}
+.tip.on { opacity: 1; }
+
+details { margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+details > summary { cursor: pointer; padding: 10px 14px; font-size: 14px; font-weight: 600; color: var(--ink-2); list-style: none; }
+details > summary::before { content: "▸ "; }
+details[open] > summary::before { content: "▾ "; }
+details > .det { padding: 0 14px 14px; overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12.5px; color: var(--ink-3); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+td.n, th.n { text-align: right; }
+tr.hl td { background: color-mix(in srgb, var(--s-four) 10%, transparent); }
+.math { font: 14px/1.6 ui-monospace, "Cascadia Mono", Consolas, monospace; background: var(--surface-2); border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; }
+
+/* loop diagram */
+.loop-wrap { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; align-items: center; }
+@media (max-width: 860px) { .loop-wrap { grid-template-columns: 1fr; } }
+.loop .node rect { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; transition: all .2s; }
+.loop .node text { fill: var(--ink); font-size: 13px; font-weight: 600; }
+.loop .node.on rect { fill: var(--rec-bg); stroke: var(--accent); stroke-width: 2.5; }
+.loop .arrow { stroke: var(--ink-3); stroke-width: 1.8; fill: none; }
+.loop .node { cursor: pointer; }
+.step-text { min-height: 150px; }
+.step-nav { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.calc-out { font-size: 15px; margin-top: 8px; }
+.meter { display: inline-block; width: 90px; height: 8px; border-radius: 4px; background: var(--surface-2); vertical-align: middle; margin-right: 8px; overflow: hidden; }
+.meter i { display: block; height: 100%; border-radius: 4px; }
+
+/* prompts */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.tabs button { font: inherit; font-size: 14px; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); cursor: pointer; }
+.tabs button[aria-selected=true] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+blockquote.prompt { margin: 0 0 14px; padding: 16px 18px; border-left: 4px solid var(--accent); background: var(--surface-2); border-radius: 0 10px 10px 0; font-size: 16px; white-space: pre-wrap; }
+
+.cta { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: #fff; text-decoration: none; padding: 12px 18px; border-radius: 10px; font-weight: 700; }
+.cta:hover { filter: brightness(1.08); }
+.note { border: 1px dashed var(--line); border-radius: 10px; padding: 12px 14px; font-size: 14px; color: var(--ink-2); }
+.foot { text-align: center; padding: 28px 16px 48px; font-size: 13px; color: var(--ink-3); }
+@media print { .bar, .progress, .menu { display: none; } main { padding-top: 0; } .slide { min-height: 0; page-break-after: always; } details { display: block; } }
+</style>
+</head>
+<body>
+
+<header class="bar" role="banner">
+  <div class="brand">Release 4.2 Review <span>· Rook Dispatch · fictional course scenario</span></div>
+  <button id="prev" aria-label="Previous section">←</button>
+  <div class="counter" id="counter" aria-live="polite">1 / 12</div>
+  <button id="next" aria-label="Next section">→</button>
+  <button id="menuBtn" aria-expanded="false" aria-controls="menu">Sections</button>
+  <button id="themeBtn" aria-label="Switch light or dark theme">◐</button>
+</header>
+<div class="progress" id="progress"></div>
+<nav class="menu" id="menu" aria-label="Sections"></nav>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<main>
+
+<!-- 0 · COVER -->
+<section class="slide" id="s-cover" data-title="Cover">
+<div class="wrap">
+  <div class="kicker">Claude Code for PMs · Final presentation · Matt DeLeon, PM Rook Dispatch · 8 Oct 2026</div>
+  <div class="hero">
+    <div>
+      <h1>Release 4.2 didn't lose callouts. It moved them away from four people, and the code gives them no way back.</h1>
+      <p class="lede">The strongest explanation: the shorter answer window caused a burst of missed offers, and the code scores every miss like a "no." Nothing in the code lets a score heal, and four responders went from about 12 offers a week to almost none.</p>
+      <div class="legend-tags" aria-label="How to read the labels in this presentation">
+        <span><span class="tag t-conf">Confirmed</span> checked in data, code or documents</span>
+        <span><span class="tag t-assm">Assumption</span> a guess or placeholder</span>
+        <span><span class="tag t-rec">Recommendation</span> what I propose</span>
+        <span><span class="tag t-open">Open</span> we don't know yet</span>
+      </div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><div class="stat">77.9<small>%</small></div><div class="stat-label">acceptance, the week before 4.2 (3 Aug)</div></div>
+      <div class="card"><div class="stat">54.2<small>%</small></div><div class="stat-label">acceptance in release week (10 Aug)</div></div>
+      <div class="card"><div class="stat">4</div><div class="stat-label">responders fell from ~12 offers/week to 0–1</div></div>
+      <div class="card"><div class="stat">60<small>%</small></div><div class="stat-label">acceptance needed just to hold your score steady</div></div>
+      <p class="tiny" style="grid-column:1/-1;margin:0">Sources: <code>00-rook/data/callout-history.csv</code>, <code>00-rook/code/dispatch-routing/config.py</code>. Use ← → or the Sections menu to move around.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- 1 · RECOMMENDATION -->
+<section class="slide" id="s-rec" data-title="1 · Recommendation">
+<div class="wrap">
+  <div class="kicker">1 · Executive recommendation</div>
+  <h2>4.2 is the most likely cause. Fix the score so it can heal, and test it in shadow before it goes live.</h2>
+  <p class="lede">Don't wait for a "seasonal" bounce, and don't quietly change a number. Approve a 2-week shadow test of <b>Back in Rotation</b>, starting with score healing.</p>
+  <div class="grid g2">
+    <div class="rec-box">
+      <h3>What I'm asking Helen to approve <span class="tag t-rec">Recommendation</span></h3>
+      <ol>
+        <li><b>Stop treating "seasonal" as the main explanation.</b> Acceptance dropped 24 points in a single week, the week 4.2 shipped. The repo has no prior-year data that could support a seasonal pattern. Seasonality isn't disproven, but nothing points to it.</li>
+        <li><b>Shadow-test score healing</b> (about 2 weeks). Scores drift back toward the middle (0.5) over time. Log how rankings <i>would</i> change, but don't act on it yet.</li>
+        <li><b>Set healing no faster than "halfway in 3 days."</b> Faster healing starts rewarding people who refuse every job.</li>
+        <li><b>Hold the "cheaper timeout" change</b> until Ravi can split timeouts from deliberate "no"s.</li>
+        <li><b>Decide separately whether to revisit the 60-second window.</b> The evidence points to it as the likely trigger, though we can't yet prove the misses were timeouts. Back in Rotation deliberately leaves it alone.</li>
+      </ol>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3>Why <span class="tag t-conf">Confirmed</span></h3>
+        <ul>
+          <li>The four's acceptance fell first (release week); their offers fell in the weeks after. <span class="src"><code>callout-history.csv</code>, weekly totals</span></li>
+          <li>The code charges −0.12 for <i>any</i> "not yes," timeouts included, and gives only +0.08 for a yes. <span class="src"><code>history.py:27,39</code> · <code>offer.py:30</code></span></li>
+          <li>Nothing in the code ever lets a score recover without new offers. <span class="src"><code>history.py:30–34</code> (Wen's 2019 TODO)</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>What this does <i>not</i> claim <span class="tag t-open">Open</span></h3>
+        <ul>
+          <li>That healed scores will bring offers back. That's what the shadow test must show.</li>
+          <li>That the live system matches the repo, or that scores survived the deploy. Wen needs to confirm both.</li>
+          <li>That the four's misses were timeouts rather than deliberate "no"s. The data doesn't separate them.</li>
+          <li>That their real scores are low. Scores aren't stored, so the score drop is inferred from the code plus their offer history.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- 2 · PROBLEM -->
+<section class="slide" id="s-problem" data-title="2 · The problem">
+<div class="wrap">
+  <div class="kicker">2 · The original problem</div>
+  <h2>One release changed two things at once, and the two pulled in different directions.</h2>
+  <p class="lede">4.2 shipped on 12 August. Ticket volume tripled. Nobody had written down how routing works, and the PM who shipped it left nine days later.</p>
+  <div class="grid g3">
+    <div class="card">
+      <h3>What changed <span class="tag t-conf">Confirmed</span></h3>
+      <table>
+        <tr><th>Setting</th><th class="n">Before</th><th class="n">4.2</th></tr>
+        <tr><td>Answer window</td><td class="n">90 s</td><td class="n"><b>60 s</b></td></tr>
+        <tr><td>Weight: distance</td><td class="n">0.45</td><td class="n"><b>0.60</b></td></tr>
+        <tr><td>Weight: recent "yes"</td><td class="n">0.40</td><td class="n"><b>0.25</b></td></tr>
+        <tr><td>Weight: skills</td><td class="n">0.15</td><td class="n">0.15</td></tr>
+      </table>
+      <span class="src"><code>config.py:9–15</code> ("was…" notes) · <code>release-history.pdf</code></span>
+    </div>
+    <div class="card">
+      <h3>Who was affected <span class="tag t-conf">Confirmed</span></h3>
+      <ul>
+        <li><b>Responders:</b> masked heroes whose phones get the callout. Four of the 16 nearly stopped being asked.</li>
+        <li><b>Handlers</b> like Kip: they watch the console and can't see why one responder is quiet while another is overloaded.</li>
+        <li><b>Support:</b> callout tickets ran "about 3x normal." About two-thirds said "phone never goes off" and one-third "gone before I could answer."</li>
+      </ul>
+      <span class="src"><code>dispatch-slack-thread.txt</code> (Nadia, 18 &amp; 26 Aug) · <code>kip.txt</code></span>
+    </div>
+    <div class="card">
+      <h3>Why it mattered</h3>
+      <ul>
+        <li>Rook charges <b>per active responder</b>. Someone who stops getting work may stop being active. <span class="tag t-assm">Assumption</span></li>
+        <li>The inherited advice was <i>"mostly seasonal… don't revert."</i> No source in the repo supports the seasonal part. <span class="src"><code>handoff-from-priya.docx</code></span></li>
+        <li>The roadmap lists the routing change's driver as <b>"Internal."</b> The release notes say responders asked for it. <span class="src"><code>roadmap-q3.pdf</code> vs <code>release-history.pdf</code></span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- 3 · CUSTOMER EVIDENCE -->
+<section class="slide" id="s-voice" data-title="3 · Customer evidence">
+<div class="wrap">
+  <div class="kicker">3 · Customer evidence</div>
+  <h2>The interviews and tickets agreed something broke. They disagreed about what.</h2>
+  <p class="lede">I counted <b>people, not tickets</b>. Several handlers filed more than once, which made some themes look bigger than they were.</p>
+  <div class="grid g2">
+    <div class="card">
+      <h3>4 handler interviews (2–5 Sept) <span class="tag t-conf">Confirmed</span></h3>
+      <table>
+        <tr><th>Theme</th><th class="n">Handlers</th><th>Who</th></tr>
+        <tr><td>Offer vanished before they could answer</td><td class="n">3 of 4</td><td>Ambrose, Aunt Dot, Halloran</td></tr>
+        <tr><td>Can't tell when a callout is live</td><td class="n">3 of 4</td><td>Kip, Ambrose, Aunt Dot</td></tr>
+        <tr><td>Weeks of going quiet</td><td class="n">2 of 4</td><td>Kip (Mite), Aunt Dot (Vesper)</td></tr>
+        <tr><td>Overloaded</td><td class="n">1 of 4</td><td>Kip (The Gale)</td></tr>
+      </table>
+      <p class="small muted" style="margin-top:10px">"Mite thinks Mite's been forgotten. Gale's exhausted." (Kip, the handler for both)</p>
+      <span class="src"><code>00-rook/feedback/interviews/*.txt</code>. These were console-research calls run by Sofia, not a 4.2 study.</span>
+    </div>
+    <div class="card">
+      <h3>25 support tickets (13 Aug – 5 Sept) <span class="tag t-conf">Confirmed</span></h3>
+      <div class="grid g3" style="gap:10px;margin-bottom:10px">
+        <div><div class="stat" style="font-size:34px">12</div><div class="stat-label small">responders named</div></div>
+        <div><div class="stat" style="font-size:34px">18<small>/25</small></div><div class="stat-label small">tickets contradicted by the data</div></div>
+        <div><div class="stat" style="font-size:34px">7</div><div class="stat-label small">said "quiet" while their offers <b>rose</b></div></div>
+      </div>
+      <ul class="small">
+        <li><b>Quiet-but-rising:</b> Nightwell, Ironvale, Stormwrack, Cindermark, The Drift, Sgt. Falkirk and The Longcast all reported going quiet. Each had more offers after 4.2 than before.</li>
+        <li>Of the four who really collapsed, <b>Farlight and The Undertow</b> filed tickets. <b>Meteor Mite and Vesper filed none</b>; we know about them only from interviews and data.</li>
+      </ul>
+      <details><summary>How "contradicted" is defined, with all 25 tickets</summary><div class="det">
+        <p class="small"><b>Rule (re-checked for this deck):</b> a ticket is <b>contradicted</b> if it says the responder got no offers, almost none, or a specific low number over some period, and <b>every week</b> of <code>pings_sent</code> covering that period shows 5 or more offers. It's <b>partly contradicted</b> if it says "nothing" but the covering weeks show 1–4 offers. It <b>can't be checked</b> if it only says an offer vanished, because the data has weekly totals, not per-offer timing.</p>
+        <table id="tblTickets"></table>
+        <p class="tiny" style="margin-top:8px">Result: <b>18 contradicted, 3 partly, 4 can't check</b>. This matches the Module 3 count. Limit: weeks start on Monday and tickets are filed mid-week, so a per-offer log could change individual calls (e.g. T-002 if all 10 of Ashgrove's offers came after 14 Aug). "Contradicted" doesn't mean the filer is wrong about what they saw on the phone; it means the data and the ticket disagree.</p>
+      </div></details>
+      <span class="src"><code>00-rook/feedback/tickets/t-001…t-025.txt</code> vs <code>00-rook/data/callout-history.csv</code>, re-checked ticket by ticket for this deck.</span>
+    </div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <h3>Where the sources agree</h3>
+      <p class="small" style="margin:0">Offers <b>vanish faster</b> since 4.2 (interviews, tickets and the 90→60 s change). People <b>can't see why</b> they're quiet or busy.</p>
+    </div>
+    <div class="card">
+      <h3>Where they disagree <span class="tag t-open">Open</span></h3>
+      <p class="small" style="margin:0">Most "quiet" tickets come from people whose recorded offers went <b>up</b>. Two possible explanations, neither proven <span class="tag t-assm">Hypothesis</span>: <code>pings_sent</code> counts offers the phone never showed, or "quiet" means something other than "no offers." Only Ravi's per-offer log can settle it.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- 4 · DATA -->
+<section class="slide" id="s-data" data-title="4 · Data analysis">
+<div class="wrap">
+  <div class="kicker">4 · Data analysis</div>
+  <h2>A sudden drop in release week, and four people who hadn't come back by 31 Aug.</h2>
+  <p class="lede">16 responders, 10 weeks (29 Jun – 31 Aug). "Before" = 6 weeks to 3 Aug. "After" = 17, 24 and 31 Aug. The release week (10 Aug) is shown but kept out of before/after averages.</p>
+
+  <div class="grid g2">
+    <div class="card">
+      <h3>Weekly acceptance, all 16 responders <span class="tag t-conf">Confirmed</span></h3>
+      <svg class="chart" id="chAcc" viewBox="0 0 520 260" role="img" aria-label="Line chart of weekly acceptance rate"></svg>
+      <p class="small muted" style="margin:6px 0 0">75–78% for six weeks, <b>54.2%</b> in release week, <b>68.5%</b> averaged after. It is climbing (72.7% by 31 Aug) but is still below every pre-release week.</p>
+      <details><summary>Show the rows and arithmetic</summary><div class="det" id="tblAcc"></div></details>
+    </div>
+    <div class="card">
+      <h3>Offers mostly moved; few were lost <span class="tag t-conf">Confirmed</span></h3>
+      <div class="key"><span><i style="background:var(--s-four)"></i>The four who collapsed</span><span><i style="background:var(--s-other)"></i>Other 12</span></div>
+      <svg class="chart" id="chDumb" viewBox="0 0 520 420" role="img" aria-label="Average weekly offers before and after 4.2 for each responder"></svg>
+      <p class="small muted" style="margin:6px 0 0">Total offers fell only about 6% (172.3 → 161.7 a week). <b>10 of the other 12 gained 19–49%</b>. Ashgrove and Halfmoon fell about 25%, then held.</p>
+    </div>
+  </div>
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <h3>Release-week acceptance predicts who lost offers <span class="tag t-conf">Confirmed</span></h3>
+      <svg class="chart" id="chScatter" viewBox="0 0 520 300" role="img" aria-label="Scatter of release-week acceptance against change in offers"></svg>
+      <p class="small muted" style="margin:6px 0 0">Correlation <b>0.84</b> with release-week acceptance, versus <b>0.28</b> with pre-release acceptance. How people did in the first 60-second week is far more closely linked to who lost offers than their track record was. This is a correlation across 16 people, not proof of cause, but it's what the code's scoring would predict. Before 4.2, no responder had a week below 60%.</p>
+    </div>
+    <div class="card">
+      <h3>The four, row by row</h3>
+      <div style="overflow-x:auto"><table id="tblFour"></table></div>
+      <details><summary>Show the arithmetic for "the four"</summary><div class="det"><div class="math" id="mathFour"></div></div></details>
+      <p class="small muted" style="margin-top:10px"><b>The puzzle:</b> Sgt. Bulwark also hit 50% in release week but <i>gained</i> 19%. Something besides acceptance must differ, probably distance or score history. <span class="tag t-open">Open</span> Needs Wen's travel-time and score data.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- 5 · ROOT CAUSE -->
+<section class="slide" id="s-cause" data-title="5 · Root cause">
+<div class="wrap">
+  <div class="kicker">5 · Root cause</div>
+  <h2>A feedback loop with no way out, in the code as written.</h2>
+  <p class="lede">Click through the loop. Each step is either in the routing code (<code>00-rook/code/dispatch-routing/</code>) or in the data. That the steps linked up this way for the four is the <b>best-supported explanation, not yet proven</b>. Wen's score history and Ravi's per-offer log would confirm or refute it.</p>
+  <div class="loop-wrap">
+    <svg class="chart loop" id="loop" viewBox="0 0 520 400" role="img" aria-label="Diagram of the routing feedback loop"></svg>
+    <div class="card">
+      <div class="step-text" id="stepText" aria-live="polite"></div>
+      <div class="step-nav">
+        <button class="btn" id="stepPrev">← Back</button>
+        <button class="btn" id="stepNext">Next step →</button>
+        <span class="tiny" id="stepNum"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid g3" style="margin-top:18px">
+    <div class="card">
+      <h3>Confirmed by the code <span class="tag t-conf">Confirmed</span></h3>
+      <ul class="small">
+        <li>Timeout and "no" cost the same −0.12. <code>history.py:35–39</code>, <code>offer.py:30</code></li>
+        <li>The clock starts when the offer is <i>sent</i>, not when it's seen. <code>offer.py:41–42</code></li>
+        <li>No healing, decay or time window. <code>history.py:30–34</code></li>
+        <li>The same rules apply to everyone, including existing decliners. This answers half of Marcus's 14 Aug question.</li>
+        <li>Nobody is removed; low scores just sink down the list. <code>routing.py:21–22</code></li>
+        <li>No alerts or safety nets in this repo. Scores live only in memory. <code>history.py:17</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Ruled out or not supported</h3>
+      <ul class="small">
+        <li><b>"It's seasonal" (not supported):</b> the drop is a one-week step, not a slide, and there's no prior-year data to test it either way. Five analysts (30 Sept) agreed 4.2 was the more likely cause.</li>
+        <li><b>"They were already decliners":</b> nobody was below 60% before 4.2, and pre-release acceptance barely predicts the loss (0.28).</li>
+        <li><b>"The weights alone did it" (unlikely):</b> the new weights reduce the acceptance score's influence (0.40 → 0.25), which <i>softens</i> the penalty. A shorter window fits the one-week acceptance drop better. This comes from the Module 4 analysis, not a live test.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Still uncertain <span class="tag t-open">Open</span></h3>
+      <ul class="small">
+        <li>Does the live system match the repo? (There's one commit.)</li>
+        <li>Did scores reset at the 4.2 deploy?</li>
+        <li>How many misses were timeouts vs. real "no"s?</li>
+        <li>Did phones actually show every offer?</li>
+        <li>Why Bulwark escaped and why Ashgrove/Halfmoon fell.</li>
+        <li>Whether the change was meant to hit existing decliners (the other half of Marcus's question).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>Try it: the break-even point <span class="tag t-conf">Confirmed arithmetic</span></h3>
+    <label for="beSlider" class="small">Out of 10 offers, how many does a responder accept? <b id="beVal">6</b></label>
+    <input type="range" id="beSlider" min="0" max="10" value="6" step="1">
+    <div class="calc-out" id="beOut"></div>
+    <span class="src">+0.08 per yes (<code>config.py:18</code>), −0.12 per anything else (<code>config.py:19</code>). Break-even: 0.08 × a = 0.12 × (1 − a), so a = 60%.</span>
+  </div>
+</div>
+</section>
+
+<!-- 6 · SOLUTION -->
+<section class="slide" id="s-solution" data-title="6 · Back in Rotation">
+<div class="wrap">
+  <div class="kicker">6 · Proposed solution</div>
+  <h2>Back in Rotation: let scores heal, without letting anyone jump the line.</h2>
+  <p class="lede">I picked this direction (Approach 2) over giving quiet responders priority. Nobody gets put ahead of a closer or better-matched responder.</p>
+  <div class="grid g3">
+    <div class="card">
+      <h3>1 · Score healing <span class="tag t-rec">Recommendation</span></h3>
+      <p class="small">A low score drifts back toward the middle (0.5), even with no offers. A deliberate "no" still costs the full 0.12. This is Wen's 2019 TODO, finally answered.</p>
+    </div>
+    <div class="card">
+      <h3>2 · Cheaper timeouts <span class="tag t-assm">Pending data</span></h3>
+      <p class="small">A timeout costs less than a deliberate "no." The code already tells them apart (<code>offer.py:14–16</code>), but how much this helps depends on a split we don't have yet.</p>
+    </div>
+    <div class="card">
+      <h3>Fairness safeguards <span class="tag t-rec">Recommendation</span></h3>
+      <ul class="small"><li>No line-jumping, guaranteed offers or tie-breaker.</li><li>"Ready now" only tells the handler; it never moves anyone up the list.</li><li>No change to the Availability Record that Supply reads.</li><li>No identity data is stored or inferred.</li></ul>
+    </div>
+  </div>
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <h3>Replay: each person's score on 31 Aug under four rule sets</h3>
+      <p class="small muted">Real weekly history replayed through the code's rules. <span class="tag t-assm">Assumption</span> Everyone starts at 0.5 on 29 June. Half of misses are timeouts. A timeout costs half as much as a "no." Scores heal halfway in 5 days. This shows <b>scores, not offers</b>.</p>
+      <div style="overflow-x:auto"><table id="tblReplay"></table></div>
+      <p class="small" style="margin-top:10px"><b>Healing does most of the work</b>, because it keeps going after the offers stop. Ashgrove and Halfmoon sit at 1.00 under every rule, so their drop has a different cause.</p>
+      <span class="src">Recomputed for this deck from <code>callout-history.csv</code> using the replay in <code>05-super-speed/prototype.html</code>. It matches <code>brief.md</code>.</span>
+    </div>
+    <div class="card">
+      <h3>The Decliner Test: does healing reward refusals?</h3>
+      <p class="small muted">A made-up responder gets 10 offers a week and says "no" to all of them for 10 weeks. The bars show their average score when offered work. <span class="tag t-assm">Simulated</span></p>
+      <svg class="chart" id="chDecl" viewBox="0 0 520 220" role="img" aria-label="Bar chart of the Decliner Test"></svg>
+      <p class="small" style="margin-top:6px"><b>Healing halfway in 1 day gives a full-time refuser 0.30.</b> At 3 days or slower it stays near zero. <span class="tag t-rec">Recommendation</span> Heal no faster than 3 days, or pause healing after a deliberate "no."</p>
+    </div>
+  </div>
+
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <h3>A healed score is not offers back <span class="tag t-conf">Confirmed arithmetic</span></h3>
+      <div class="math">1. Score gap: 1.0 − 0.5 = 0.5
+   (reliable peer vs. healed responder)
+2. × acceptance weight 0.25 = 0.125
+3. ÷ distance weight 0.60 = 0.208
+4. × 45-minute horizon ≈ 9.4 minutes</div>
+      <p class="small" style="margin-top:8px">A healed responder still ranks behind a reliable peer who is up to about 9 minutes farther away. <span class="src"><code>config.py:13–14,26</code> · <code>routing.py:38–54</code></span></p>
+    </div>
+    <div class="card">
+      <h3>Deliberately deferred <span class="tag t-open">Open</span></h3>
+      <ul class="small">
+        <li><b>Where healing stops:</b> at 0.5, or at a typical responder's score? Needs Wen's score data.</li>
+        <li><b>How big the timeout discount is:</b> needs Ravi's timeout-vs-"no" split.</li>
+        <li><b>The healing speed:</b> placeholder; 3 days or slower.</li>
+        <li><b>Ashgrove and Halfmoon:</b> probably the 4.2 distance weighting, but unconfirmed.</li>
+        <li><b>Late phone delivery</b> is out of scope here.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- 7 · PROTOTYPE -->
+<section class="slide" id="s-proto" data-title="7 · Prototype">
+<div class="wrap">
+  <div class="kicker">7 · Working prototype</div>
+  <h2>Something Helen can click: Kip's console and Mite's phone.</h2>
+  <p class="lede">Helen asked for "something a handler like Kip would notice, and something a responder who's gone quiet would feel differently about." The prototype is one HTML file.</p>
+  <div class="grid g2">
+    <div class="card">
+      <p><a class="cta" href="05-super-speed/prototype.html" target="_blank" rel="noopener">Open the Back in Rotation prototype ↗</a></p>
+      <p class="small"><b>The link is relative:</b> <code>05-super-speed/prototype.html</code>, resolved from this file's folder. It works when <code>final-report.html</code> is opened from the repository root, next to the <code>05-super-speed</code> folder.</p>
+      <ol class="small">
+        <li>Clone or download the repository <code>mdeleon86/claude-code-for-pms-final</code> (on GitHub: Code → Download ZIP, then unzip).</li>
+        <li>Open <code>final-report.html</code> from the repository root in a browser (double-click it, or drag it into a browser window).</li>
+        <li>Click the button above. The prototype opens in a new tab.</li>
+        <li><b>Or</b> open <code>05-super-speed/prototype.html</code> directly from the same folder.</li>
+      </ol>
+      <p class="tiny">It won't work from a copy of this file saved somewhere else, an email attachment, or GitHub's file viewer, which shows HTML as source code rather than running it. Both files are self-contained and need no internet connection.</p>
+      <h3 style="margin-top:14px">What to click first</h3>
+      <ol class="small">
+        <li><b>Start a callout</b> on Mite's phone, then try accept, decline and timeout to watch the score change.</li>
+        <li><b>Compare the rules</b> (Simulation A): Mite's offers under today's rules vs. Back in Rotation, including a "timeouts keep happening" scenario.</li>
+        <li><b>Rule lab</b> (Simulation B): move the three sliders and see six real responders' scores and the Decliner Test.</li>
+      </ol>
+      <p class="tiny">Last readiness review of the brief and prototype: about 87/100 (Module 5).</p>
+    </div>
+    <div class="card">
+      <h3>What's real and what's simulated</h3>
+      <table>
+        <tr><th>Part</th><th>Status</th></tr>
+        <tr><td>Weekly offers and accepts on cards and charts</td><td><span class="tag t-conf">Observed</span> from the CSV</td></tr>
+        <tr><td>Today's scoring rules (+0.08 / −0.12, 0–1, no healing)</td><td><span class="tag t-conf">From code</span></td></tr>
+        <tr><td>Rule lab replay (Sim B)</td><td><span class="tag t-assm">Simulated</span> real history, placeholder rules; shows scores only</td></tr>
+        <tr><td>Mite's future offers (Sim A)</td><td><span class="tag t-assm">Illustrative</span> assumes a score of 0.5 wins back his old volume</td></tr>
+        <tr><td>Decliner Test</td><td><span class="tag t-assm">Simulated</span> a made-up responder</td></tr>
+        <tr><td>Console card, live alert, "Ready now"</td><td><span class="tag t-rec">Proposed screens</span> not built</td></tr>
+        <tr><td>Healing speed, timeout discount</td><td><span class="tag t-assm">Placeholders</span> for Wen</td></tr>
+      </table>
+      <p class="small muted" style="margin-top:10px">Simulations A and B are separate, with different controls and assumptions. Sim A's offer curve is the most optimistic part of the prototype.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- 8 · AUTOMATION -->
+<section class="slide" id="s-auto" data-title="8 · Automation">
+<div class="wrap">
+  <div class="kicker">8 · Automation (Module 6)</div>
+  <h2>A reusable reviewer: the <code style="font-size:.8em">review-checklist</code> skill.</h2>
+  <p class="lede">I turned "is this brief any good?" into six repeatable checks, tested them twice, verified the skill was really used, then scheduled it to run weekly.</p>
+  <div class="grid g4">
+    <div class="card"><div class="kicker" style="margin:0 0 6px">Step 1 · Created</div><p class="small" style="margin:0">One prompt, in an earlier session, defined six checks and three ratings (Pass / Needs Improvement / Missing), with a cited section and a specific fix for each. It is read-only and never rewrites the brief.</p><span class="src"><code>.claude/skills/review-checklist/SKILL.md</code></span></div>
+    <div class="card"><div class="kicker" style="margin:0 0 6px">Step 2 · Test 1</div><p class="small" style="margin:0">Ran the skill on my own <b>Back in Rotation brief</b>. That review's output wasn't saved to the repo, so its results aren't shown here.</p><span class="src"><code>05-super-speed/brief.md</code></span></div>
+    <div class="card"><div class="kicker" style="margin:0 0 6px">Step 3 · Test 2</div><p class="small" style="margin:0">Ran it on <b>4 sample briefs</b>. Every one had <b>Risks: Missing</b>, and none had a success target with a number and a timeframe.</p><span class="src"><code>06-sidekicks/briefs/</code></span></div>
+    <div class="card"><div class="kicker" style="margin:0 0 6px">Step 4 · Verified</div><p class="small" style="margin:0">A separate check that the skill was <b>actually invoked</b>, not imitated. SKILL.md matched what was followed. One slip: a few facts came from CLAUDE.md, not from files opened in that session.</p></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="kicker" style="margin:0 0 6px">Step 5 · Scheduled (not yet run)</div>
+    <p class="small" style="margin:0">A weekly task, "Monday brief review," runs the skill on <code>06-sidekicks/briefs/</code> <b>every Monday at about 9:11 AM local time</b>. It's set for 9:00, and the scheduler adds a fixed offset of a few minutes. The <b>first run is Monday 12 October 2026</b>, so <b>no scheduled run has happened yet</b>. Each run will save a report to <code>06-sidekicks/review-runs/&lt;date&gt;.md</code>, a folder that doesn't exist until then. It runs only while the Claude desktop app is open; if the app is closed, it runs the next time it opens.</p>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <h3>The six checks</h3>
+      <ol class="small" style="columns:2;column-gap:24px;margin:0;padding-left:1.2em">
+        <li>Owner</li><li>Measurable success</li><li>Consistent scope</li><li>Problem before solution</li><li>Evidence &amp; assumptions</li><li>Risks &amp; mitigation</li>
+      </ol>
+    </div>
+    <div class="card" style="overflow-x:auto">
+      <h3>Test 2 results: 4 sample briefs (Pass · Needs Improvement · Missing)</h3>
+      <table>
+        <tr><th>Brief</th><th class="n">P·NI·M</th><th>Top issue</th></tr>
+        <tr><td>Bulk Callout</td><td class="n">1·4·1</td><td>No risks; bulk offers add declines that cost −0.12 each</td></tr>
+        <tr><td>Handler Phone App</td><td class="n">0·5·1</td><td>Misquotes the Aunt Dot interview</td></tr>
+        <tr><td>Requisition Approval Chains</td><td class="n">2·3·1</td><td>Scope creep; a 48-hour bypass undoes the second sign-off</td></tr>
+        <tr><td>Routing Override Audit Log</td><td class="n">3·1·2</td><td>No success measure</td></tr>
+      </table>
+    </div>
+  </div>
+  <p class="note" style="margin-top:16px">Caveat: <code>06-sidekicks/scheduled-run-output.txt</code> looks like a run report but didn't come from this schedule. It's dated 13 Oct (in the future), uses only 4 checks, and disagrees with Test 2. I left it alone and don't rely on it.</p>
+</div>
+</section>
+
+<!-- 9 · LESSONS -->
+<section class="slide" id="s-lessons" data-title="9 · Lessons learned">
+<div class="wrap">
+  <div class="kicker">9 · Lessons learned</div>
+  <h2>The best prompt from each module, and what it changed.</h2>
+  <p class="lede">Quoted exactly from each module's <code>prompts.md</code>. Long prompts are cut with "…" (see the file for the full text).</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="card" id="tabPanel" role="tabpanel" aria-live="polite"></div>
+  <div class="grid g3" style="margin-top:16px">
+    <div class="card"><h3>Count people, not rows</h3><p class="small" style="margin:0">Counting unique responders (Module 2), then checking every ticket against the data (Module 3), exposed 18 of 25 tickets that the data doesn't back up.</p></div>
+    <div class="card"><h3>Ask what can't be proven</h3><p class="small" style="margin:0">"What are we still assuming?" kept the score-reset and live-vs-repo questions open instead of quietly answered.</p></div>
+    <div class="card"><h3>Make the tool check itself</h3><p class="small" style="margin:0">"Verify rather than assume" caught that some citations came from notes, not from files opened that session.</p></div>
+  </div>
+</div>
+</section>
+
+<!-- 10 · NEXT STEPS -->
+<section class="slide" id="s-next" data-title="10 · Next steps">
+<div class="wrap">
+  <div class="kicker">10 · Next steps</div>
+  <h2>Three decisions, eight answers we still need, and how we'll know it worked.</h2>
+  <div class="grid g3">
+    <div class="card">
+      <h3>Helen approves <span class="tag t-rec">Decision</span></h3>
+      <ol class="small">
+        <li>A ~2-week <b>shadow test</b> of score healing (it logs only and doesn't act).</li>
+        <li><b>Healing speed limit:</b> no faster than halfway in 3 days.</li>
+        <li>Whether the <b>60 s window</b> gets its own review, separate from Back in Rotation.</li>
+      </ol>
+      <p class="small muted">Also with Helen: which items squeezed out of 4.2 (e.g. <b>Availability Confidence</b>) are still Q3 commitments. <span class="src"><code>roadmap-q3.pdf</code>, <code>handoff-from-priya.docx</code></span></p>
+    </div>
+    <div class="card">
+      <h3>Engineering and data validate <span class="tag t-open">Open</span></h3>
+      <p class="small" style="margin-bottom:4px"><b>Wen:</b></p>
+      <ul class="small">
+        <li>Does live routing match the repo?</li>
+        <li>Did scores survive the deploy?</li>
+        <li>Score history and travel times for the four vs. Bulwark.</li>
+        <li>Healing speed and where healing stops.</li>
+      </ul>
+      <p class="small" style="margin:8px 0 4px"><b>Ravi:</b></p>
+      <ul class="small">
+        <li>Per-offer log (sent / shown / outcome).</li>
+        <li>What <code>pings_sent</code> counts.</li>
+        <li>Timeouts vs. real "no"s.</li>
+        <li>Nightwell's 12–22 Aug assignments.</li>
+      </ul>
+      <p class="small muted">Tell the <b>Supply</b> team before any change near availability (<code>availability.py</code>).</p>
+    </div>
+    <div class="card">
+      <h3>How we'll measure it</h3>
+      <table class="small">
+        <tr><th>Measure</th><th>Baseline we have</th></tr>
+        <tr><td>The four's weekly offers vs. their own past</td><td>11.2–13.8/wk before → 1.3–2.7 after</td></tr>
+        <tr><td>Days to the four's first accepted job</td><td>None yet; needs the per-offer log</td></tr>
+        <tr><td>Busiest four's share of offers</td><td>31.8% before → 45.4% after</td></tr>
+        <tr><td>Guardrails: time-to-accept, people asked per incident, coverage gaps, first-asked-not-closest</td><td>Must not get worse; baselines from Ravi</td></tr>
+      </table>
+      <p class="small muted" style="margin-top:8px">No numeric targets are set yet. That needs the baselines above, and I won't invent them. <span class="src"><code>05-super-speed/brief.md</code></span></p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- 11 · SOURCES -->
+<section class="slide" id="s-sources" data-title="Sources">
+<div class="wrap">
+  <div class="kicker">Appendix</div>
+  <h2>Sources and limits</h2>
+  <div class="grid g2">
+    <div class="card">
+      <h3>Where each number comes from</h3>
+      <table class="small">
+        <tr><th>Claim</th><th>Source</th></tr>
+        <tr><td>Acceptance, offers, the four, correlations 0.84 / 0.28</td><td>Recomputed from <code>00-rook/data/callout-history.csv</code> while building this deck (awk; numbers inside the page are calculated live from the embedded rows)</td></tr>
+        <tr><td>Weights, window, +0.08 / −0.12, horizon</td><td><code>config.py:9–26</code></td></tr>
+        <tr><td>Timeout = decline; no healing; memory-only scores</td><td><code>history.py:17,27,30–39</code>, <code>offer.py:25–48</code></td></tr>
+        <tr><td>Nobody removed from the list</td><td><code>routing.py:18–27</code>, <code>README.md</code></td></tr>
+        <tr><td>Ticket themes and 3x volume</td><td><code>dispatch-slack-thread.txt</code>, <code>feedback/tickets/</code></td></tr>
+        <tr><td>18 of 25 tickets contradicted</td><td>All 25 files in <code>feedback/tickets/</code> vs <code>callout-history.csv</code>; table and rule in section 3</td></tr>
+        <tr><td>Monday schedule</td><td>Scheduler confirmation for task <code>weekly-brief-review</code> (about 9:11 AM; first run 12 Oct 2026)</td></tr>
+        <tr><td>Interview themes</td><td><code>feedback/interviews/</code> (4 handlers)</td></tr>
+        <tr><td>Replay and Decliner Test</td><td><code>05-super-speed/prototype.html</code>, <code>brief.md</code> (recomputed)</td></tr>
+        <tr><td>Change history and driver</td><td><code>release-history.pdf</code>, <code>roadmap-q3.pdf</code>, <code>handoff-from-priya.docx</code></td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>What this evidence can't show</h3>
+      <ul class="small">
+        <li><b>Only 10 weeks of data</b> and no prior year, so seasonality can't be tested directly; it can only be found unsupported.</li>
+        <li><b>Weekly totals only:</b> no per-offer timing, no split between timeouts and "no"s, no proof the phone showed the offer.</li>
+        <li><b>The repo has one commit.</b> The "before" values come from comments, not history, and live may differ.</li>
+        <li><b>Scores aren't stored</b>, so real scores are unknown. Replay scores are estimates from a 0.5 start.</li>
+        <li><b>Only 4 interviews</b>, all console research and all handlers. No responder was interviewed directly.</li>
+        <li>The <b>18/25 ticket figure was re-checked ticket by ticket for this deck</b> under the rule shown in section 3. It still relies on weekly totals, so a per-offer log could change individual tickets. The "five analysts" debate comes from an earlier module session, recorded in <code>CLAUDE.md</code>.</li>
+        <li>The <b>first skill test</b> (on <code>05-super-speed/brief.md</code>) wasn't saved to the repo, so its results can't be checked here.</li>
+        <li>Rook Industries is fictional. This is a course scenario, and no responder identities are used.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</section>
+
+</main>
+<div class="foot">Claude Code for PMs · cohort ccpm-2026.1 · Rook Industries is a fictional teaching scenario.</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- data: 00-rook/data/callout-history.csv, embedded verbatim ---------- */
+  var WEEKS = ['29 Jun','6 Jul','13 Jul','20 Jul','27 Jul','3 Aug','10 Aug','17 Aug','24 Aug','31 Aug'];
+  var REL = 6; // index of release week (10 Aug)
+  var R = [
+    {n:"Captain Vantage", s:[12,13,12,11,12,12,13,15,17,18], t:[10,10,8,7,9,9,8,11,13,13]},
+    {n:"Cindermark", s:[9,9,8,10,9,9,10,11,12,12], t:[7,8,6,7,7,8,6,8,8,9]},
+    {n:"Corporal Ashgrove", s:[10,11,10,9,10,10,10,8,7,7], t:[8,9,7,7,8,8,6,5,5,5]},
+    {n:"Farlight", s:[12,12,11,12,13,12,10,3,1,0], t:[9,9,8,9,10,8,4,0,0,0]},
+    {n:"Halfmoon", s:[11,10,11,12,11,11,11,9,8,8], t:[8,7,8,8,9,8,6,5,5,7]},
+    {n:"Ironvale", s:[8,8,9,8,7,8,9,10,11,12], t:[6,5,8,6,5,7,5,6,8,9]},
+    {n:"Meteor Mite", s:[11,12,10,11,12,11,10,4,2,1], t:[7,9,6,7,9,8,4,1,0,0]},
+    {n:"Nightwell", s:[15,14,15,16,15,15,16,18,20,21], t:[11,10,12,12,11,12,9,14,13,15]},
+    {n:"Sgt. Bulwark", s:[9,9,10,9,8,9,10,10,11,11], t:[7,7,8,7,5,7,5,8,7,8]},
+    {n:"Sgt. Falkirk", s:[10,10,11,10,9,10,11,13,15,16], t:[9,8,8,8,7,8,7,9,11,11]},
+    {n:"Stormwrack", s:[13,13,12,14,13,13,14,16,18,19], t:[10,11,9,12,10,10,8,12,13,15]},
+    {n:"The Drift", s:[6,6,7,6,6,6,7,7,8,8], t:[5,5,6,5,5,5,4,5,6,5]},
+    {n:"The Gale", s:[13,12,13,14,13,13,15,17,20,21], t:[10,9,10,11,11,10,9,12,14,16]},
+    {n:"The Longcast", s:[7,7,8,7,7,7,8,8,9,9], t:[5,5,7,5,5,5,5,6,5,7]},
+    {n:"The Undertow", s:[12,11,12,13,12,12,11,4,1,1], t:[9,9,9,10,10,9,4,1,0,0]},
+    {n:"Vesper", s:[14,13,15,14,13,14,12,5,2,1], t:[11,10,13,11,11,12,6,1,0,0]}
+  ];
+  var FOUR = ['Farlight','Meteor Mite','The Undertow','Vesper'];
+  var NS = 'http://www.w3.org/2000/svg';
+  var $ = function (id) { return document.getElementById(id); };
+  var sum = function (a) { return a.reduce(function (x, y) { return x + y; }, 0); };
+  var pct = function (v, d) { return (v * 100).toFixed(d === undefined ? 1 : d) + '%'; };
+  var isFour = function (n) { return FOUR.indexOf(n) >= 0; };
+
+  R.forEach(function (r) {
+    var preS = sum(r.s.slice(0, REL)), preT = sum(r.t.slice(0, REL));
+    var postS = sum(r.s.slice(REL + 1)), postT = sum(r.t.slice(REL + 1));
+    r.preAvg = preS / REL; r.postAvg = postS / 3; r.preAcc = preT / preS;
+    r.relAcc = r.t[REL] / r.s[REL]; r.chg = r.postAvg / r.preAvg - 1;
+    r.preS = preS; r.preT = preT; r.postS = postS; r.postT = postT;
+  });
+
+  /* ---------- helpers ---------- */
+  function el(tag, attrs, parent, text) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  var tip = $('tip');
+  function showTip(evt, html) {
+    tip.innerHTML = html; tip.classList.add('on');
+    var x = evt.clientX + 14, y = evt.clientY + 14;
+    var w = tip.offsetWidth, h = tip.offsetHeight;
+    if (x + w > window.innerWidth - 8) x = evt.clientX - w - 14;
+    if (y + h > window.innerHeight - 8) y = evt.clientY - h - 14;
+    tip.style.left = Math.max(8, x) + 'px'; tip.style.top = Math.max(8, y) + 'px';
+  }
+  function hideTip() { tip.classList.remove('on'); }
+  function hover(node, html) {
+    node.addEventListener('mousemove', function (e) { showTip(e, html); });
+    node.addEventListener('mouseleave', hideTip);
+    node.addEventListener('focus', function () { var b = node.getBoundingClientRect(); showTip({ clientX: b.right, clientY: b.top }, html); });
+    node.addEventListener('blur', hideTip);
+    node.setAttribute('tabindex', '0');
+  }
+
+  /* ---------- chart 1: weekly acceptance ---------- */
+  (function () {
+    var svg = $('chAcc'), W = 520, H = 260, L = 44, Rm = 16, T = 18, B = 34;
+    var acc = WEEKS.map(function (_, i) {
+      var s = sum(R.map(function (r) { return r.s[i]; })), t = sum(R.map(function (r) { return r.t[i]; }));
+      return { s: s, t: t, v: t / s };
+    });
+    var y0 = 0.5, y1 = 0.8;
+    var x = function (i) { return L + i * (W - L - Rm) / (WEEKS.length - 1); };
+    var y = function (v) { return T + (y1 - v) / (y1 - y0) * (H - T - B); };
+    [0.5, 0.6, 0.7, 0.8].forEach(function (g) {
+      el('line', { x1: L, x2: W - Rm, y1: y(g), y2: y(g), 'class': 'grid-l' }, svg);
+      el('text', { x: L - 8, y: y(g) + 4, 'text-anchor': 'end' }, svg, (g * 100) + '%');
+    });
+    var rx = x(REL);
+    el('line', { x1: rx, x2: rx, y1: T - 6, y2: H - B, stroke: 'var(--ink-3)', 'stroke-dasharray': '4 3' }, svg);
+    el('text', { x: rx + 6, y: T + 2, 'class': 'lbl-strong' }, svg, '4.2 ships · 12 Aug');
+    WEEKS.forEach(function (w, i) { if (i % 2 === 0 || i === REL) el('text', { x: x(i), y: H - B + 18, 'text-anchor': 'middle' }, svg, w); });
+    var d = acc.map(function (a, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(a.v).toFixed(1); }).join(' ');
+    el('path', { d: d, fill: 'none', stroke: 'var(--s-other)', 'stroke-width': 2.5, 'stroke-linejoin': 'round' }, svg);
+    acc.forEach(function (a, i) {
+      var c = el('circle', { cx: x(i), cy: y(a.v), r: 5, fill: i === REL ? 'var(--s-four)' : 'var(--s-other)', stroke: 'var(--surface)', 'stroke-width': 2 }, svg);
+      var hit = el('rect', { x: x(i) - 20, y: T, width: 40, height: H - T - B, fill: 'transparent' }, svg);
+      hover(hit, '<b>Week of ' + WEEKS[i] + '</b><br>' + a.t + ' accepted ÷ ' + a.s + ' offers = <b>' + pct(a.v) + '</b>');
+    });
+    el('text', { x: x(REL) + 8, y: y(acc[REL].v) + 4, 'class': 'lbl-strong' }, svg, pct(acc[REL].v));
+    el('text', { x: x(5), y: y(acc[5].v) - 10, 'text-anchor': 'middle', 'class': 'lbl-strong' }, svg, pct(acc[5].v));
+    // table
+    var preS = sum(acc.slice(0, REL).map(function (a) { return a.s; })), preT = sum(acc.slice(0, REL).map(function (a) { return a.t; }));
+    var poS = sum(acc.slice(REL + 1).map(function (a) { return a.s; })), poT = sum(acc.slice(REL + 1).map(function (a) { return a.t; }));
+    var h = '<table><tr><th>Week</th><th class="n">Offers</th><th class="n">Accepted</th><th class="n">Rate</th></tr>';
+    acc.forEach(function (a, i) { h += '<tr' + (i === REL ? ' class="hl"' : '') + '><td>' + WEEKS[i] + (i === REL ? ' (release)' : '') + '</td><td class="n">' + a.s + '</td><td class="n">' + a.t + '</td><td class="n">' + pct(a.v) + '</td></tr>'; });
+    h += '</table><div class="math" style="margin-top:10px">Before (6 wks): ' + preT + ' ÷ ' + preS + ' = ' + pct(preT / preS) +
+      '\nAfter (3 wks):  ' + poT + ' ÷ ' + poS + ' = ' + pct(poT / poS) +
+      '\nOffers per week: ' + (preS / 6).toFixed(1) + ' before → ' + (poS / 3).toFixed(1) + ' after (' + pct(poS / 3 / (preS / 6) - 1) + ')</div>';
+    $('tblAcc').innerHTML = h;
+  })();
+
+  /* ---------- chart 2: dumbbell before/after offers ---------- */
+  (function () {
+    var svg = $('chDumb'), W = 520, L = 128, Rm = 54, T = 26, rowH = 23;
+    var rows = R.slice().sort(function (a, b) { return a.chg - b.chg; });
+    var H = T + rows.length * rowH + 26; svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    var max = 22, x = function (v) { return L + v / max * (W - L - Rm); };
+    [0, 5, 10, 15, 20].forEach(function (g) {
+      el('line', { x1: x(g), x2: x(g), y1: T - 6, y2: H - 22, 'class': 'grid-l' }, svg);
+      el('text', { x: x(g), y: H - 6, 'text-anchor': 'middle' }, svg, g);
+    });
+    el('text', { x: W - Rm + 4, y: 12, 'text-anchor': 'start' }, svg, 'change');
+    el('text', { x: L, y: 12 }, svg, 'avg offers/week: ○ before → ● after');
+    rows.forEach(function (r, i) {
+      var cy = T + i * rowH + rowH / 2, col = isFour(r.n) ? 'var(--s-four)' : 'var(--s-other)';
+      el('text', { x: L - 8, y: cy + 4, 'text-anchor': 'end', 'class': isFour(r.n) ? 'lbl-strong' : '' }, svg, r.n);
+      el('line', { x1: x(r.preAvg), x2: x(r.postAvg), y1: cy, y2: cy, stroke: col, 'stroke-width': 2, opacity: .7 }, svg);
+      el('circle', { cx: x(r.preAvg), cy: cy, r: 5, fill: 'var(--surface)', stroke: col, 'stroke-width': 2 }, svg);
+      el('circle', { cx: x(r.postAvg), cy: cy, r: 5.5, fill: col, stroke: 'var(--surface)', 'stroke-width': 1.5 }, svg);
+      el('text', { x: W - Rm + 4, y: cy + 4, 'class': isFour(r.n) ? 'lbl-strong' : '' }, svg, (r.chg > 0 ? '+' : '') + Math.round(r.chg * 100) + '%');
+      var hit = el('rect', { x: 0, y: cy - rowH / 2, width: W, height: rowH, fill: 'transparent' }, svg);
+      hover(hit, '<b>' + r.n + '</b><br>Before: ' + r.preS + ' offers ÷ 6 wks = ' + r.preAvg.toFixed(2) + '/wk<br>After: ' + r.postS + ' ÷ 3 wks = ' + r.postAvg.toFixed(2) + '/wk<br>Change: ' + (r.chg > 0 ? '+' : '') + pct(r.chg, 0));
+    });
+  })();
+
+  /* ---------- chart 3: scatter release-week acceptance vs change ---------- */
+  function corr(xs, ys) {
+    var n = xs.length, mx = sum(xs) / n, my = sum(ys) / n, sxy = 0, sxx = 0, syy = 0;
+    for (var i = 0; i < n; i++) { sxy += (xs[i] - mx) * (ys[i] - my); sxx += Math.pow(xs[i] - mx, 2); syy += Math.pow(ys[i] - my, 2); }
+    return sxy / Math.sqrt(sxx * syy);
+  }
+  (function () {
+    var svg = $('chScatter'), W = 520, H = 300, L = 48, Rm = 16, T = 16, B = 40;
+    var x = function (v) { return L + (v - 0.3) / 0.4 * (W - L - Rm); };
+    var y = function (v) { return T + (0.6 - v) / 1.6 * (H - T - B); };
+    [0.3, 0.4, 0.5, 0.6, 0.7].forEach(function (g) { el('line', { x1: x(g), x2: x(g), y1: T, y2: H - B, 'class': 'grid-l' }, svg); el('text', { x: x(g), y: H - B + 16, 'text-anchor': 'middle' }, svg, Math.round(g * 100) + '%'); });
+    [-1, -0.5, 0, 0.5].forEach(function (g) { el('line', { x1: L, x2: W - Rm, y1: y(g), y2: y(g), 'class': g === 0 ? 'axis' : 'grid-l' }, svg); el('text', { x: L - 6, y: y(g) + 4, 'text-anchor': 'end' }, svg, (g > 0 ? '+' : '') + Math.round(g * 100) + '%'); });
+    el('text', { x: (L + W - Rm) / 2, y: H - 6, 'text-anchor': 'middle' }, svg, 'acceptance in release week (10 Aug)');
+    el('text', { x: 12, y: (T + H - B) / 2, 'text-anchor': 'middle', transform: 'rotate(-90 12 ' + ((T + H - B) / 2) + ')' }, svg, 'change in weekly offers');
+    var placed = {};
+    R.forEach(function (r) {
+      var col = isFour(r.n) ? 'var(--s-four)' : 'var(--s-other)';
+      var key = Math.round(r.relAcc * 100) + ':' + Math.round(r.chg * 20); var off = (placed[key] = (placed[key] || 0) + 1) - 1;
+      var c = el('circle', { cx: x(r.relAcc) + off * 7, cy: y(r.chg), r: 6, fill: col, stroke: 'var(--surface)', 'stroke-width': 2 }, svg);
+      hover(c, '<b>' + r.n + '</b><br>Release week: ' + r.t[REL] + '/' + r.s[REL] + ' = ' + pct(r.relAcc, 0) + '<br>Offers: ' + (r.chg > 0 ? '+' : '') + pct(r.chg, 0));
+      if (r.n === 'Sgt. Bulwark') el('text', { x: x(r.relAcc) + 10, y: y(r.chg) - 8, 'class': 'lbl-strong' }, svg, 'Bulwark');
+    });
+    el('text', { x: x(0.4) + 12, y: y(-0.85) + 4, 'class': 'lbl-strong' }, svg, 'the four');
+    var r1 = corr(R.map(function (r) { return r.relAcc; }), R.map(function (r) { return r.chg; }));
+    var r2 = corr(R.map(function (r) { return r.preAcc; }), R.map(function (r) { return r.chg; }));
+    el('text', { x: W - Rm, y: y(-0.95), 'text-anchor': 'end' }, svg, 'r = ' + r1.toFixed(2) + ' (pre-release acceptance: ' + r2.toFixed(2) + ')');
+  })();
+
+  /* ---------- table: the four ---------- */
+  (function () {
+    var rows = R.filter(function (r) { return isFour(r.n) || r.n === 'Sgt. Bulwark'; });
+    var h = '<tr><th>Responder</th><th class="n">Before /wk</th><th class="n">Release wk</th><th class="n">After /wk</th><th class="n">31 Aug</th></tr>';
+    rows.forEach(function (r) {
+      h += '<tr' + (isFour(r.n) ? ' class="hl"' : '') + '><td>' + r.n + '</td><td class="n">' + r.preAvg.toFixed(1) + '</td><td class="n">' + r.t[REL] + '/' + r.s[REL] + ' (' + pct(r.relAcc, 0) + ')</td><td class="n">' + r.postAvg.toFixed(1) + '</td><td class="n">' + r.s[9] + ' offers</td></tr>';
+    });
+    $('tblFour').innerHTML = h;
+    var m = '';
+    rows.forEach(function (r) {
+      m += r.n + '\n  before: (' + r.s.slice(0, REL).join('+') + ') ÷ 6 = ' + r.preAvg.toFixed(2) +
+        '\n  after:  (' + r.s.slice(REL + 1).join('+') + ') ÷ 3 = ' + r.postAvg.toFixed(2) +
+        '   change ' + (r.chg > 0 ? '+' : '') + pct(r.chg, 0) + '\n';
+    });
+    var mite = R.filter(function (r) { return r.n === 'Meteor Mite'; })[0];
+    var ms = sum(mite.s.slice(REL)), mt = sum(mite.t.slice(REL));
+    m += '\nMeteor Mite, 10–31 Aug: ' + mite.s.slice(REL).join('+') + ' = ' + ms + ' offers, ' + mite.t.slice(REL).join('+') + ' = ' + mt + ' accepted → missed ' + (ms - mt) + ' of ' + ms;
+    $('mathFour').textContent = m;
+  })();
+
+  /* ---------- loop diagram ---------- */
+  (function () {
+    var svg = $('loop');
+    var steps = [
+      { t: '60-second window', b: 'The answer window dropped from 90 to 60 seconds. The clock starts when the offer is <i>sent</i>, so a slow delivery or a responder halfway into their suit loses time.', s: '<code>config.py:9</code> · <code>offer.py:41–42</code>', tag: 'conf' },
+      { t: 'More timeouts', b: 'In release week, acceptance fell from 77.9% to 54.2%, and three of four interviewed handlers described offers vanishing before they could answer. <b>The drop in acceptance is a fact. That the extra misses were mostly timeouts is an inference</b>: the data doesn\'t separate timeouts from "no"s.', s: '<code>callout-history.csv</code> · interviews', tag: 'inf' },
+      { t: '−0.12 per miss', b: 'A timeout is scored exactly like a deliberate "no": −0.12. A yes earns only +0.08, so anyone below 60% acceptance loses ground. Meteor Mite took 4 of 10 in release week: 4 × 0.08 − 6 × 0.12 = −0.40.', s: '<code>history.py:27,39</code> · <code>offer.py:30</code>', tag: 'conf' },
+      { t: 'Ranked lower', b: 'The acceptance score is 25% of the ranking. Nobody is removed, but a lower score drops you down the list, and offers go to whoever ranks above you. <b>The mechanism is in the code.</b> The four\'s actual scores aren\'t stored, so how far they fell is inferred.', s: '<code>routing.py:38–42</code> · <code>config.py:14</code>', tag: 'conf' },
+      { t: 'Fewer offers', b: 'The four went from about 12 offers a week to 0–1, while The Gale (+49%) and Sgt. Falkirk (+47%) gained. <b>Observed in the data.</b> That those offers went to others <i>because</i> of lower scores fits the code but isn\'t proven without score history.', s: '<code>callout-history.csv</code>', tag: 'obs' },
+      { t: 'Score frozen', b: 'With no offers there is no chance to say yes, and nothing in the code heals a score over time. Wen asked about this in 2019 and left it as-is. <b>In the code as written, the loop has no exit.</b> This is where Back in Rotation steps in.', s: '<code>history.py:30–34</code>', tag: 'conf' }
+    ];
+    var cx = 260, cy = 200, rx = 180, ry = 145, bw = 150, bh = 46;
+    var pos = steps.map(function (_, i) { var a = -Math.PI / 2 + i * 2 * Math.PI / steps.length; return { x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a) }; });
+    var defs = el('defs', {}, svg);
+    var mk = el('marker', { id: 'ah', viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
+    el('path', { d: 'M0 0 L10 5 L0 10 z', fill: 'var(--ink-3)' }, mk);
+    pos.forEach(function (p, i) {
+      var q = pos[(i + 1) % pos.length];
+      var dx = q.x - p.x, dy = q.y - p.y, len = Math.sqrt(dx * dx + dy * dy);
+      var sh = 0.30, eh = 0.70;
+      var mx = (p.x + q.x) / 2 + (-(dy) / len) * -18, my = (p.y + q.y) / 2 + (dx / len) * -18;
+      el('path', { d: 'M' + (p.x + dx * sh) + ' ' + (p.y + dy * sh) + ' Q' + mx + ' ' + my + ' ' + (p.x + dx * eh) + ' ' + (p.y + dy * eh), 'class': 'arrow', 'marker-end': 'url(#ah)' }, svg);
+    });
+    el('text', { x: cx, y: cy - 4, 'text-anchor': 'middle', 'class': 'lbl-strong', style: 'font-size:15px' }, svg, 'The 4.2 spiral');
+    el('text', { x: cx, y: cy + 16, 'text-anchor': 'middle' }, svg, 'click a step');
+    var nodes = pos.map(function (p, i) {
+      var g = el('g', { 'class': 'node', transform: 'translate(' + (p.x - bw / 2) + ' ' + (p.y - bh / 2) + ')', role: 'button', 'aria-label': 'Step ' + (i + 1) + ': ' + steps[i].t, tabindex: 0 }, svg);
+      el('rect', { width: bw, height: bh, rx: 10 }, g);
+      el('text', { x: bw / 2, y: bh / 2 + 5, 'text-anchor': 'middle' }, g, (i + 1) + '. ' + steps[i].t);
+      g.addEventListener('click', function () { go(i); });
+      g.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(i); } });
+      return g;
+    });
+    var TAGS = { conf: '<span class="tag t-conf">In the code</span>', obs: '<span class="tag t-conf">Observed in data</span>', inf: '<span class="tag t-assm">Inferred</span>' };
+    var cur = 0;
+    function go(i) {
+      cur = (i + steps.length) % steps.length;
+      nodes.forEach(function (n, j) { n.classList.toggle('on', j === cur); });
+      var s = steps[cur];
+      $('stepText').innerHTML = '<div class="kicker" style="margin-bottom:6px">Step ' + (cur + 1) + ' of ' + steps.length + '</div><h3>' + s.t + ' ' + TAGS[s.tag] + '</h3><p class="small">' + s.b + '</p><span class="src">' + s.s + '</span>';
+      $('stepNum').textContent = '';
+    }
+    $('stepNext').addEventListener('click', function () { go(cur + 1); });
+    $('stepPrev').addEventListener('click', function () { go(cur - 1); });
+    go(0);
+  })();
+
+  /* ---------- break-even calculator ---------- */
+  (function () {
+    var s = $('beSlider');
+    function upd() {
+      var a = +s.value, net = Math.round((a * 0.08 - (10 - a) * 0.12) * 100) / 100;
+      $('beVal').textContent = a;
+      var verdict = Math.abs(net) < 1e-9 ? 'holds steady' : (net > 0 ? 'rises' : 'falls');
+      $('beOut').innerHTML = a + ' × (+0.08) + ' + (10 - a) + ' × (−0.12) = <b>' + (net > 0 ? '+' : net < 0 ? '−' : '') + Math.abs(net).toFixed(2) + '</b> per 10 offers. The score <b>' + verdict + '</b>.' +
+        (net < 0 ? ' Under today\'s rules it stays down until new offers arrive and get accepted.' : '');
+    }
+    s.addEventListener('input', upd); upd();
+  })();
+
+  /* ---------- replay (logic copied from 05-super-speed/prototype.html Rule Lab, default sliders) ---------- */
+  var P = { share: 50, ratio: 50 };
+  function clamp(v) { return Math.max(0, Math.min(1, v)); }
+  function healDay(s, heal, half) { return (heal && s < 0.5) ? 0.5 - (0.5 - s) * Math.pow(0.5, 1 / half) : s; }
+  function weekPlan(n, a) {
+    var days = [[], [], [], [], [], [], []];
+    for (var k = 0; k < n; k++) { var yes = Math.floor((k + 1) * a / n) > Math.floor(k * a / n); days[Math.floor(k * 7 / n)].push(yes); }
+    return days;
+  }
+  function replay(r, heal, light, half) {
+    var tc = light ? 0.12 * P.ratio / 100 : 0.12, mc = P.share / 100 * tc + (1 - P.share / 100) * 0.12, s = 0.5;
+    for (var w = 0; w < 10; w++) {
+      var days = weekPlan(r.s[w], r.t[w]);
+      for (var d = 0; d < 7; d++) { s = healDay(s, heal, half); for (var j = 0; j < days[d].length; j++) s = clamp(s + (days[d][j] ? 0.08 : -mc)); }
+    }
+    return s;
+  }
+  function decliner(heal, half) {
+    var s = 0.5, tot = 0, c = 0;
+    for (var w = 0; w < 10; w++) {
+      var days = weekPlan(10, 0);
+      for (var d = 0; d < 7; d++) { s = healDay(s, heal, half); for (var j = 0; j < days[d].length; j++) { if (w > 0) { tot += s; c++; } s = clamp(s - 0.12); } }
+    }
+    return tot / c;
+  }
+  (function () {
+    var names = ['Farlight', 'Meteor Mite', 'The Undertow', 'Vesper', 'Corporal Ashgrove', 'Halfmoon'];
+    var rules = [['Today (4.2)', false, false], ['Healing only', true, false], ['Cheaper timeouts only', false, true], ['Both', true, true]];
+    var h = '<tr><th>Responder</th>' + rules.map(function (r) { return '<th class="n">' + r[0] + '</th>'; }).join('') + '</tr>';
+    names.forEach(function (n) {
+      var r = R.filter(function (x) { return x.n === n; })[0];
+      h += '<tr' + (isFour(n) ? ' class="hl"' : '') + '><td>' + n + '</td>' + rules.map(function (ru) {
+        var v = replay(r, ru[1], ru[2], 5);
+        return '<td class="n"><span class="meter"><i style="width:' + Math.round(v * 100) + '%;background:' + (ru[1] ? 'var(--s-prop)' : 'var(--s-four)') + '"></i></span>' + v.toFixed(2) + '</td>';
+      }).join('') + '</tr>';
+    });
+    $('tblReplay').innerHTML = h;
+  })();
+
+  /* ---------- decliner chart ---------- */
+  (function () {
+    var svg = $('chDecl'), W = 520, H = 220, L = 170, Rm = 50, T = 10, rowH = 46;
+    var data = [
+      ['Today\'s rules (no healing)', decliner(false, 5), 'var(--s-four)'],
+      ['Heal halfway in 5 days', decliner(true, 5), 'var(--s-prop)'],
+      ['Heal halfway in 3 days', decliner(true, 3), 'var(--s-prop)'],
+      ['Heal halfway in 1 day', decliner(true, 1), 'var(--s-prop)']
+    ];
+    var x = function (v) { return L + v / 0.5 * (W - L - Rm); };
+    [0, 0.25, 0.5].forEach(function (g) { el('line', { x1: x(g), x2: x(g), y1: T, y2: H - 22, 'class': 'grid-l' }, svg); el('text', { x: x(g), y: H - 6, 'text-anchor': 'middle' }, svg, g.toFixed(2)); });
+    data.forEach(function (d, i) {
+      var cy = T + i * rowH + 8, bh = 26;
+      el('text', { x: L - 10, y: cy + bh / 2 + 4, 'text-anchor': 'end' }, svg, d[0]);
+      var w = Math.max(2, x(d[1]) - L);
+      var b = el('rect', { x: L, y: cy, width: w, height: bh, rx: 4, fill: d[2] }, svg);
+      el('text', { x: L + w + 6, y: cy + bh / 2 + 4, 'class': 'lbl-strong' }, svg, d[1].toFixed(2));
+      hover(b, '<b>' + d[0] + '</b><br>Average score when offered work, weeks 2–10: ' + d[1].toFixed(2));
+    });
+  })();
+
+  /* ---------- ticket check: all 25 tickets vs pings_sent (claims paraphrased) ---------- */
+  (function () {
+    // [id, filed, responder, claim, week indexes used, verdict] verdict: c = contradicted, p = partly, x = can't check
+    var T = [
+      ['T-001', '13 Aug', 'Captain Vantage', 'Offer moved on while he was suiting up', [6], 'x'],
+      ['T-002', '14 Aug', 'Corporal Ashgrove', 'Phone hasn\'t gone off in six days', [6], 'c'],
+      ['T-003', '17 Aug', 'Sgt. Falkirk', 'Gone before I opened the app', [7], 'x'],
+      ['T-004', '18 Aug', 'Nightwell', 'Second week running with almost nothing', [6, 7], 'c'],
+      ['T-005', '19 Aug', 'The Undertow', 'One callout since the start of the month', [5, 6], 'c'],
+      ['T-006', '20 Aug', 'Corporal Ashgrove', 'Nothing all week', [7], 'c'],
+      ['T-007', '20 Aug', 'The Longcast', 'Gone by the time I unlocked, twice this week', [7], 'x'],
+      ['T-008', '21 Aug', 'Ironvale', 'No callouts since the 12th', [6, 7], 'c'],
+      ['T-009', '22 Aug', 'Nightwell', 'Nothing in about 10 days', [6, 7], 'c'],
+      ['T-010', '23 Aug', 'Halfmoon', 'More than a week with nothing', [6, 7], 'c'],
+      ['T-011', '24 Aug', 'Nightwell', 'First offer in ten days, then missed it', [6, 7], 'c'],
+      ['T-012', '25 Aug', 'The Longcast', 'Quiet this week after two callouts last week', [7, 8], 'c'],
+      ['T-013', '26 Aug', 'The Undertow', 'Nothing again this week', [8], 'p'],
+      ['T-014', '27 Aug', 'Stormwrack', 'Quietest since he joined', [7, 8], 'c'],
+      ['T-015', '27 Aug', 'Cindermark', 'Switched to someone else as I tapped', [8], 'x'],
+      ['T-016', '28 Aug', 'Sgt. Falkirk', 'Slow early August; quiet again this past week', [5, 6, 8], 'c'],
+      ['T-017', '29 Aug', 'Ironvale', 'Still nothing', [8], 'c'],
+      ['T-018', '30 Aug', 'Farlight', 'Almost two weeks without a single callout', [7, 8], 'p'],
+      ['T-019', '31 Aug', 'The Undertow', 'Two weeks of nothing, then lost the one offer', [7, 8], 'p'],
+      ['T-020', '1 Sep', 'Cindermark', 'About ten days with only one callout', [8], 'c'],
+      ['T-021', '2 Sep', 'Halfmoon', 'Week 2 of nothing', [7, 8], 'c'],
+      ['T-022', '3 Sep', 'The Drift', 'Almost three weeks, two callouts total', [7, 8], 'c'],
+      ['T-023', '3 Sep', 'The Drift', 'First one in weeks, and it vanished', [7, 8], 'c'],
+      ['T-024', '4 Sep', 'Stormwrack', 'Why has it been so dead', [8, 9], 'c'],
+      ['T-025', '5 Sep', 'Ironvale', 'First offer in almost a month', [6, 7, 8], 'c']
+    ];
+    var label = { c: '<span class="tag t-open">Contradicted</span>', p: '<span class="tag t-assm">Partly</span>', x: '<span class="tag t-conf">Can\'t check</span>' };
+    var count = { c: 0, p: 0, x: 0 };
+    var h = '<tr><th>Ticket</th><th>Responder</th><th>Claim (paraphrased)</th><th>Offers in covering weeks</th><th>Verdict</th></tr>';
+    T.forEach(function (t) {
+      var r = R.filter(function (x) { return x.n === t[2]; })[0];
+      var wk = t[4].map(function (i) { return WEEKS[i] + ': ' + r.s[i]; }).join(', ');
+      var min = Math.min.apply(null, t[4].map(function (i) { return r.s[i]; }));
+      // guard: the stated verdict must agree with the rule applied to the embedded data
+      if (t[5] !== 'x' && (min >= 5 ? 'c' : 'p') !== t[5]) console.error('Ticket rule mismatch', t[0]);
+      count[t[5]]++;
+      h += '<tr' + (t[5] === 'c' ? ' class="hl"' : '') + '><td>' + t[0] + '<br><span class="tiny">' + t[1] + '</span></td><td>' + t[2] + '</td><td>' + t[3] + '</td><td>' + wk + '</td><td>' + label[t[5]] + '</td></tr>';
+    });
+    $('tblTickets').innerHTML = h;
+    window.__ticketCounts = count;
+  })();
+
+  /* ---------- lessons tabs ---------- */
+  (function () {
+    var P6 = [
+      { m: 'M1 · Origin Story', q: 'What\'s contradictory or missing, not just in the company documents, but across everything in 00-rook?', w: 'It turned onboarding into an audit. It surfaced the gaps the rest of the course chased: no written routing logic, an unsupported "seasonal" claim, and the roadmap saying "Internal" where the release notes say responders asked.', f: '01-origin-story/prompts.md #2' },
+      { m: 'M2 · Super Hearing', q: 'If we count unique responders instead of individual tickets, what problems are actually most widespread, and does that change what we should conclude from the tickets?', w: 'Repeat filers had inflated the "quiet" theme. Counting people (12 responders across 25 tickets) set the standard for every later claim: count people, not rows.', f: '02-super-hearing/prompts.md #8' },
+      { m: 'M3 · Rewind', q: 'How sensitive are these conclusions to how we treat the week of August 10, since Release 4.2 shipped in the middle of that week? Recalculate the key results with the release week excluded, counted as before, and counted as after. Tell me which conclusions remain true in all three cases.', w: 'It put a hidden judgement call in the open: release week is half old rules, half new. Since then every number states how 10 Aug is treated, and the default is to exclude it. That is why the before/after figures in this deck can be checked and defended.', f: '03-rewind/prompts.md #3' },
+      { m: 'M4 · X-Ray Vision', q: 'The code calls this a "recent acceptance" score, but does it actually measure recent behavior? Trace exactly how that score is calculated over time and explain whether old misses ever stop affecting someone. If the name and behavior don\'t match, explain why that matters for someone who\'s gone quiet. Keep it concise.', w: 'It found the core defect: "recent" isn\'t recent. With no decay or window, silence freezes the score. That is the missing exit from the loop, and the reason score healing became the fix.', f: '04-x-ray-vision/prompts.md #10' },
+      { m: 'M5 · Super Speed', q: '…3. Add a Decliner Test\nSimulate someone receiving 10 offers per week and deliberately declining every offer for 10 weeks.\nShow their ending score under all four rules. Determine whether our proposed changes accidentally reward people who repeatedly refuse work. Do not force the results to match the instructor\'s example.…', w: 'It stress-tested my own solution. Fast healing (halfway in 1 day) gave a full-time refuser 0.30, which set the "3 days or slower" safeguard. It also showed healing does most of the work and that Ashgrove and Halfmoon need a different fix.', f: '05-super-speed/prompts.md #7 (excerpt)' },
+      { m: 'M6 · Sidekicks', q: 'Did you load and follow .claude/skills/review-checklist/SKILL.md when reviewing the four briefs, or did you perform the review independently? Please verify rather than assume.', w: 'It made the automation check itself. The skill was used as written, but a few cited facts came from notes rather than files opened that session. Knowing that is what makes a weekly automated review trustworthy.', f: '06-sidekicks/prompts.md #3' }
+    ];
+    var tabs = $('tabs'), panel = $('tabPanel'), btns = [];
+    function show(i) {
+      btns.forEach(function (b, j) { b.setAttribute('aria-selected', j === i ? 'true' : 'false'); b.tabIndex = j === i ? 0 : -1; });
+      var p = P6[i], bq = document.createElement('blockquote');
+      bq.className = 'prompt'; bq.textContent = p.q;
+      panel.innerHTML = '<div class="kicker">' + p.m + '</div>';
+      panel.appendChild(bq);
+      panel.insertAdjacentHTML('beforeend', '<h3>How it improved the investigation</h3><p class="small">' + p.w + '</p><span class="src"><code>' + p.f + '</code></span>');
+    }
+    P6.forEach(function (p, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.role = 'tab'; b.setAttribute('role', 'tab'); b.textContent = p.m;
+      b.addEventListener('click', function () { show(i); });
+      b.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); var k = (i + (e.key === 'ArrowRight' ? 1 : -1) + P6.length) % P6.length; show(k); btns[k].focus(); }
+      });
+      tabs.appendChild(b); btns.push(b);
+    });
+    show(0);
+  })();
+
+  /* ---------- navigation ---------- */
+  (function () {
+    var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+    var menu = $('menu'), cur = 0;
+    slides.forEach(function (s, i) {
+      var a = document.createElement('a'); a.href = '#' + s.id;
+      a.innerHTML = '<b>' + (i === 0 ? '·' : i) + '</b><span>' + s.getAttribute('data-title').replace(/^\d+ · /, '') + '</span>';
+      a.addEventListener('click', function () { closeMenu(); });
+      menu.appendChild(a);
+    });
+    var links = menu.querySelectorAll('a');
+    function setCur(i) {
+      cur = i; $('counter').textContent = (i + 1) + ' / ' + slides.length;
+      $('progress').style.width = ((i + 1) / slides.length * 100) + '%';
+      links.forEach(function (l, j) { l.classList.toggle('cur', j === i); });
+    }
+    var lockUntil = 0;
+    function goTo(i) { i = Math.max(0, Math.min(slides.length - 1, i)); lockUntil = Date.now() + 900; slides[i].scrollIntoView({ behavior: 'smooth', block: 'start' }); setCur(i); }
+    function onScroll() {
+      if (Date.now() < lockUntil) return;
+      var mid = window.innerHeight * 0.35, best = 0;
+      slides.forEach(function (s, i) { if (s.getBoundingClientRect().top <= mid) best = i; });
+      if (best !== cur) setCur(best);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    $('prev').addEventListener('click', function () { goTo(cur - 1); });
+    $('next').addEventListener('click', function () { goTo(cur + 1); });
+    function closeMenu() { menu.classList.remove('open'); $('menuBtn').setAttribute('aria-expanded', 'false'); }
+    $('menuBtn').addEventListener('click', function (e) { e.stopPropagation(); var o = menu.classList.toggle('open'); $('menuBtn').setAttribute('aria-expanded', o ? 'true' : 'false'); });
+    document.addEventListener('click', function (e) { if (!menu.contains(e.target)) closeMenu(); });
+    document.addEventListener('keydown', function (e) {
+      var t = e.target && e.target.nodeType === 1 ? e.target : null;
+      var tg = t ? t.tagName : '';
+      if (tg === 'INPUT' || tg === 'TEXTAREA' || tg === 'SELECT' || (t && t.getAttribute('role') === 'tab') || e.altKey || e.ctrlKey || e.metaKey) return;
+      if (e.key === 'Escape') closeMenu();
+      else if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); goTo(cur + 1); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); goTo(cur - 1); }
+      else if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+      else if (e.key === 'End') { e.preventDefault(); goTo(slides.length - 1); }
+    });
+    // theme toggle (per-viewer convenience; works without storage)
+    var root = document.documentElement;
+    try { var saved = localStorage.getItem('r42-theme'); if (saved) root.setAttribute('data-theme', saved); } catch (e) {}
+    $('themeBtn').addEventListener('click', function () {
+      var dark = root.getAttribute('data-theme') ? root.getAttribute('data-theme') === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var next = dark ? 'light' : 'dark'; root.setAttribute('data-theme', next);
+      try { localStorage.setItem('r42-theme', next); } catch (e) {}
+    });
+    var start = slides.findIndex(function (s) { return '#' + s.id === location.hash; });
+    setCur(start > 0 ? start : 0);
+  })();
+})();
+</script>
+</body>
+</html>

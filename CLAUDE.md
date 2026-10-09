@@ -123,7 +123,14 @@ from the "was…" notes in `config.py`: weights 0.60 proximity / 0.25 acceptance
   assumptions, and risks and mitigation. Each check is rated Pass, Needs
   Improvement or Missing, with where, problem and fix. Given a folder, it
   reviews each brief and adds a summary table.
-- **Test 1** (`06-sidekicks/briefs/`, 4 briefs):
+- **Chronology:**
+  1. Created the skill (earlier session).
+  2. **Test 1:** ran it on `05-super-speed/brief.md` (earlier session). The
+     output wasn't saved to the repo.
+  3. **Test 2:** ran it on all four briefs in `06-sidekicks/briefs/`.
+  4. **Verification:** checked separately that the skill was invoked.
+  5. **Scheduled** the weekly review (see Schedule).
+- **Test 2 results** (4 briefs):
   - Every brief had Risks Missing, and none had a measurable success target.
   - Top issues: Bulk Callout has no risks (extra declines hurt scores). Phone
     App misquotes Aunt Dot. Requisition Chains' scope creeps, and its 48h
@@ -131,13 +138,20 @@ from the "was…" notes in `config.py`: weights 0.60 proximity / 0.25 acceptance
   - Halloran's interview complains approvals are *slow*, not that they need a
     second approver.
   - CHANGELOG says the override log shipped in 4.0 and bulk callout in 4.1.
-- **Test 2:** checked that the skill was actually loaded. SKILL.md matched
-  what was followed. One slip: a few facts (`history.py:39`, Policy 4.1)
-  came from this file, not files opened in that session.
+- **Verification:** SKILL.md matched what was followed. One slip: a few facts
+  (`history.py:39`, Policy 4.1) came from this file, not files opened in that
+  session.
 - **Schedule:** "Monday brief review" (task `weekly-brief-review`) runs Mondays
-  at 9:00 local. First run is 12 Oct. Reports go to
+  at about 9:11 AM local (set for 9:00, plus the scheduler's offset). First
+  run is Monday 12 Oct 2026; none has run yet. Reports go to
   `06-sidekicks/review-runs/<date>.md`. The task file outside this folder holds
   no Rook details.
+- **18/25 tickets re-checked (8 Oct):** a ticket is contradicted if it claims
+  no, almost no, or a specific low number of offers, and every covering week
+  shows 5 or more offers. Result: 18 contradicted, 3 partly (T-013, T-018,
+  T-019; 1–4 offers), 4 can't check (vanish-only). Weekly totals only.
+- **Final presentation:** `final-report.html` in the repo root (12 sections).
+  It links to `05-super-speed/prototype.html` by relative path.
 - **Ignore `06-sidekicks/scheduled-run-output.txt`.** It's dated 13 Oct (in
   the future), uses 4 checks, and isn't from this schedule.
 
